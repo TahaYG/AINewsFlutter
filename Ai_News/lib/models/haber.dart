@@ -1,11 +1,12 @@
-
-
 class Haber {
   final int id;
   final String baslik;
   final String? icerik;
   final DateTime yayinTarihi;
   final int kategoriId;
+  final bool onaylandi;
+  final int tiklanmaSayisi;
+  final int okunmaSayisi;
 
   Haber({
     required this.id,
@@ -13,6 +14,9 @@ class Haber {
     this.icerik,
     required this.yayinTarihi,
     required this.kategoriId,
+    required this.onaylandi,
+    required this.tiklanmaSayisi,
+    required this.okunmaSayisi,
   });
 
   factory Haber.fromJson(Map<String, dynamic> json) {
@@ -22,6 +26,9 @@ class Haber {
       icerik: json['icerik'],
       yayinTarihi: DateTime.parse(json['yayinTarihi']),
       kategoriId: json['kategoriId'],
+      onaylandi: json['onaylandi'] ?? false,
+      tiklanmaSayisi: json['tiklanmaSayisi'] ?? 0,
+      okunmaSayisi: json['okunmaSayisi'] ?? 0,
     );
   }
 }

@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
 import '../models/haber.dart';
 import '../screens/haber_detay_ekrani.dart';
+import '../services/api_service.dart';
 
 class HaberKarti extends StatelessWidget {
   final Haber haber;
+  final VoidCallback onGeriDonuldu;
+  final ApiService _apiService = ApiService();
 
-  const HaberKarti({super.key, required this.haber});
+  // DEĞİŞİKLİK: 'kategoriAdi' parametresi artık gerekli değil ve kaldırıldı.
+  HaberKarti({
+    super.key,
+    required this.haber,
+    required this.onGeriDonuldu,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -17,19 +25,24 @@ class HaberKarti extends StatelessWidget {
       shadowColor: Colors.black.withOpacity(0.1),
       child: InkWell(
         borderRadius: BorderRadius.circular(12.0),
-        onTap: () {
-          Navigator.push(
+        onTap: () async {
+          _apiService.haberTiklandi(haber.id);
+          await Navigator.push(
             context,
             MaterialPageRoute(
               builder: (context) => HaberDetayEkrani(haber: haber),
             ),
           );
+          onGeriDonuldu();
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // DEĞİŞİKLİK: Kategori Chip widget'ı ve altındaki SizedBox kaldırıldı.
+
+              // Başlık
               Text(
                 haber.baslik,
                 style: GoogleFonts.lato(
@@ -39,6 +52,8 @@ class HaberKarti extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
+
+              // İçerik
               Text(
                 haber.icerik ?? 'İçerik mevcut değil.',
                 maxLines: 3,
@@ -50,10 +65,13 @@ class HaberKarti extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
+
+              // Tarih
               Align(
                 alignment: Alignment.centerRight,
                 child: Text(
-                  DateFormat('d MMMM yyyy, HH:mm', 'tr_TR').format(haber.yayinTarihi),
+                  DateFormat('d MMMM yyyy, HH:mm', 'tr_TR')
+                      .format(haber.yayinTarihi),
                   style: GoogleFonts.lato(
                     fontSize: 12,
                     color: Colors.black54,

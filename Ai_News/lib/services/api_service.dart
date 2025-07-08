@@ -1,7 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../models/kategori.dart'; // YENİ: Kategori modelinin adresini ekledik.
-import '../models/haber.dart';   // YENİ: Haber modelinin adresini ekledik.
+import '../models/haber.dart'; // YENİ: Haber modelinin adresini ekledik.
 
 class ApiService {
   // !!! ÇOK ÖNEMLİ !!!
@@ -16,22 +16,51 @@ class ApiService {
 
     if (response.statusCode == 200) {
       List<dynamic> body = jsonDecode(utf8.decode(response.bodyBytes));
-      List<Kategori> kategoriler = body.map((dynamic item) => Kategori.fromJson(item)).toList();
+      List<Kategori> kategoriler =
+          body.map((dynamic item) => Kategori.fromJson(item)).toList();
       return kategoriler;
     } else {
-      throw Exception('Kategoriler yüklenemedi. Hata kodu: ${response.statusCode}');
+      throw Exception(
+          'Kategoriler yüklenemedi. Hata kodu: ${response.statusCode}');
     }
   }
 
   Future<List<Haber>> getHaberler() async {
-     final response = await http.get(Uri.parse('$_baseUrl/api/Haberler'));
+    final response = await http.get(Uri.parse('$_baseUrl/api/Haberler'));
 
     if (response.statusCode == 200) {
       List<dynamic> body = jsonDecode(utf8.decode(response.bodyBytes));
-      List<Haber> haberler = body.map((dynamic item) => Haber.fromJson(item)).toList();
+      List<Haber> haberler =
+          body.map((dynamic item) => Haber.fromJson(item)).toList();
       return haberler;
     } else {
-      throw Exception('Haberler yüklenemedi. Hata kodu: ${response.statusCode}');
+      throw Exception(
+          'Haberler yüklenemedi. Hata kodu: ${response.statusCode}');
+    }
+  }
+
+  // === YENİ METOT 1: Tıklanma API'sini Çağırma ===
+  Future<bool> haberTiklandi(int haberId) async {
+    try {
+      final response = await http
+          .post(Uri.parse('$_baseUrl/api/Haberler/$haberId/tiklandi'));
+      // Sadece başarılı (200 OK) ise true döndür.
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Tıklanma sayacı gönderilirken hata: $e');
+      return false; // Hata durumunda false döndür.
+    }
+  }
+
+  Future<bool> haberOkundu(int haberId) async {
+    try {
+      final response =
+          await http.post(Uri.parse('$_baseUrl/api/Haberler/$haberId/okundu'));
+      // Sadece başarılı (200 OK) ise true döndür.
+      return response.statusCode == 200;
+    } catch (e) {
+      print('Okunma sayacı gönderilirken hata: $e');
+      return false; // Hata durumunda false döndür.
     }
   }
 }

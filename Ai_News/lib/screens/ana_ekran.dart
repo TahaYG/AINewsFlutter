@@ -3,6 +3,7 @@ import '../models/kategori.dart';
 import '../models/haber.dart';
 import '../services/api_service.dart';
 import '../widgets/haber_karti.dart';
+import '../utils/icon_helper.dart';
 
 class AnaEkran extends StatefulWidget {
   const AnaEkran({super.key});
@@ -22,11 +23,15 @@ class _AnaEkranState extends State<AnaEkran> {
     _yenile();
   }
 
-  void _yenile() {
+  // DEĞİŞİKLİK: Metodun dönüş tipi Future<void> olarak güncellendi.
+  // Bu, RefreshIndicator'ın ne zaman duracağını bilmesini sağlar.
+  Future<void> _yenile() async {
     setState(() {
       _kategorilerFuture = _apiService.getKategoriler();
       _haberlerFuture = _apiService.getHaberler();
     });
+    // İki API isteğinin de tamamlanmasını bekle
+    await Future.wait([_kategorilerFuture, _haberlerFuture]);
   }
 
   @override
@@ -35,18 +40,19 @@ class _AnaEkranState extends State<AnaEkran> {
       future: _kategorilerFuture,
       builder: (context, kategoriSnapshot) {
         if (kategoriSnapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(appBar: AppBar(), body: const Center(child: CircularProgressIndicator()));
+          return Scaffold(
+              appBar: AppBar(),
+              body: const Center(child: CircularProgressIndicator()));
         }
         if (kategoriSnapshot.hasError) {
-          return Scaffold(appBar: AppBar(title: const Text('Hata')), body: Center(child: Text('Hata: ${kategoriSnapshot.error}')));
+          return Scaffold(
+              appBar: AppBar(title: const Text('Hata')),
+              body: Center(child: Text('Hata: ${kategoriSnapshot.error}')));
         }
         if (!kategoriSnapshot.hasData || kategoriSnapshot.data!.isEmpty) {
-          // === HATA DÜZELTMESİ: 'const' anahtar kelimesi kaldırıldı ===
-          // Nedeni: İçindeki AppBar ve Text widget'ları const değil.
           return Scaffold(
-            appBar: AppBar(title: const Text('Veri Yok')),
-            body: const Center(child: Text('Hiç kategori bulunamadı.')),
-          );
+              appBar: AppBar(title: const Text('Veri Yok')),
+              body: const Center(child: Text('Hiç kategori bulunamadı.')));
         }
 
         final kategoriler = kategoriSnapshot.data!;
@@ -57,17 +63,23 @@ class _AnaEkranState extends State<AnaEkran> {
           child: Scaffold(
             appBar: AppBar(
               title: const Text('AI Haber Motoru'),
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.refresh, color: Theme.of(context).colorScheme.primary),
-                  onPressed: _yenile,
-                  tooltip: 'Yenile',
-                ),
-              ],
+              // DEĞİŞİKLİK: Manuel yenileme butonu kaldırıldı.
+              actions: const [],
               bottom: TabBar(
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
-                tabs: tumKategoriler.map((kategori) => Tab(text: kategori.ad.toUpperCase())).toList(),
+                tabs: tumKategoriler.map((kategori) {
+                  return Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(getIconForCategory(kategori.ad), size: 18),
+                        const SizedBox(width: 8),
+                        Text(kategori.ad.toUpperCase()),
+                      ],
+                    ),
+                  );
+                }).toList(),
               ),
             ),
             body: FutureBuilder<List<Haber>>(
@@ -77,31 +89,52 @@ class _AnaEkranState extends State<AnaEkran> {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (haberSnapshot.hasError) {
-                  return Center(child: Text('Haberler yüklenemedi: ${haberSnapshot.error}'));
+                  return Center(
+                      child:
+                          Text('Haberler yüklenemedi: ${haberSnapshot.error}'));
                 }
                 if (!haberSnapshot.hasData || haberSnapshot.data!.isEmpty) {
                   return const Center(child: Text('Hiç haber bulunamadı.'));
                 }
 
                 final tumHaberler = haberSnapshot.data!;
-                tumHaberler.sort((a, b) => b.yayinTarihi.compareTo(a.yayinTarihi));
+                tumHaberler
+                    .sort((a, b) => b.yayinTarihi.compareTo(a.yayinTarihi));
 
                 return TabBarView(
                   children: tumKategoriler.map((kategori) {
                     final filtrelenmisHaberler = kategori.id == 0
                         ? tumHaberler
-                        : tumHaberler.where((haber) => haber.kategoriId == kategori.id).toList();
-                    
+                        : tumHaberler
+                            .where((haber) => haber.kategoriId == kategori.id)
+                            .toList();
+
                     if (filtrelenmisHaberler.isEmpty) {
-                      return Center(child: Text('${kategori.ad} kategorisinde haber bulunamadı.'));
+                      return Center(
+                          child: Text(
+                              '${kategori.ad} kategorisinde gösterilecek onaylı haber bulunamadı.'));
                     }
 
-                    return ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      itemCount: filtrelenmisHaberler.length,
-                      itemBuilder: (context, index) {
-                        return HaberKarti(haber: filtrelenmisHaberler[index]);
-                      },
+                    // === DEĞİŞİKLİK: ListView.builder, RefreshIndicator ile sarmalandı ===
+                    return RefreshIndicator(
+                      onRefresh:
+                          _yenile, // Aşağı çekildiğinde _yenile fonksiyonunu çağırır.
+                      child: ListView.builder(
+                        // ListView'in her zaman kaydırılabilir olmasını sağlar,
+                        // böylece az haber varken bile yenileme çalışır.
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        itemCount: filtrelenmisHaberler.length,
+                        itemBuilder: (context, index) {
+                          final haber = filtrelenmisHaberler[index];
+                          // HATA DÜZELTMESİ: HaberKarti artık 'kategoriAdi' parametresi almadığı için
+                          // ilgili satırlar kaldırıldı.
+                          return HaberKarti(
+                            haber: haber,
+                            onGeriDonuldu: _yenile,
+                          );
+                        },
+                      ),
                     );
                   }).toList(),
                 );
