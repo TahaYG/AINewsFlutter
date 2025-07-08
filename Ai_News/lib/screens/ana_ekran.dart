@@ -4,6 +4,9 @@ import '../models/haber.dart';
 import '../services/api_service.dart';
 import '../widgets/haber_karti.dart';
 import '../utils/icon_helper.dart';
+import 'package:provider/provider.dart';
+import '../services/auth_service.dart';
+import 'kaydedilenler_ekrani.dart';
 
 class AnaEkran extends StatefulWidget {
   const AnaEkran({super.key});
@@ -62,9 +65,38 @@ class _AnaEkranState extends State<AnaEkran> {
           length: tumKategoriler.length,
           child: Scaffold(
             appBar: AppBar(
-              title: const Text('AI Haber Motoru'),
+              title: const Row(
+                children: [
+                  Icon(Icons.smart_toy_outlined),
+                  SizedBox(width: 8),
+                  Text('news.ai'),
+                ],
+              ),
               // DEĞİŞİKLİK: Manuel yenileme butonu kaldırıldı.
-              actions: const [],
+              actions: [
+                // YENİ: Kaydedilenler ekranına gitme butonu
+                IconButton(
+                  icon: const Icon(Icons.bookmark_border_outlined),
+                  tooltip: 'Kaydedilenler',
+                  onPressed: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const KaydedilenlerEkrani()),
+                    );
+                    // Kaydedilenler ekranından geri dönüldüğünde ana ekranı yenile
+                    _yenile();
+                  },
+                ),
+                // YENİ: Çıkış yapma butonu
+                IconButton(
+                  icon: const Icon(Icons.logout),
+                  tooltip: 'Çıkış Yap',
+                  onPressed: () {
+                    Provider.of<AuthService>(context, listen: false).logout();
+                  },
+                ),
+              ],
               bottom: TabBar(
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
