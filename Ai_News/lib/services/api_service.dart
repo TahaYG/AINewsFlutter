@@ -23,7 +23,7 @@ class ApiService {
   }
 
   // --- YENİ AUTH METOTLARI ---
-  Future<String?> login(String username, String password) async {
+  Future<Map<String, dynamic>?> login(String username, String password) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/api/Auth/login'),
       headers: {'Content-Type': 'application/json; charset=UTF-8'},
@@ -31,9 +31,17 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      final token = jsonDecode(response.body)['token'];
+      final responseData = jsonDecode(response.body);
+      final token = responseData['token'];
+      final roles = List<String>.from(responseData['roles']);
+
+      // Token'ı ve rolleri güvenli depolamaya yaz
       await _storage.write(key: 'auth_token', value: token);
-      return token;
+      await _storage.write(
+          key: 'user_roles',
+          value: jsonEncode(roles)); // Rolleri JSON string olarak sakla
+
+      return {'token': token, 'roles': roles};
     }
     return null;
   }

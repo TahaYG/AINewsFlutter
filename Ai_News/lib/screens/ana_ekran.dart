@@ -39,6 +39,8 @@ class _AnaEkranState extends State<AnaEkran> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context, listen: false);
+
     return FutureBuilder<List<Kategori>>(
       future: _kategorilerFuture,
       builder: (context, kategoriSnapshot) {
@@ -74,6 +76,45 @@ class _AnaEkranState extends State<AnaEkran> {
               ),
               // DEĞİŞİKLİK: Manuel yenileme butonu kaldırıldı.
               actions: [
+                if (authService.isAdmin)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Chip(
+                      avatar: Icon(
+                        Icons.admin_panel_settings,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                      label: Text(
+                        'Admin',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onPrimary,
+                        ),
+                      ),
+                      backgroundColor: Theme.of(context)
+                          .colorScheme
+                          .primary
+                          .withOpacity(0.8),
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
+                if (!authService.isAdmin && authService.isModerator)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Chip(
+                      avatar: Icon(Icons.security_outlined,
+                          size: 18, color: Colors.white),
+                      label: const Text('Mod',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
+                      backgroundColor: Colors.orange[700], // Farklı bir renk
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      visualDensity: VisualDensity.compact,
+                    ),
+                  ),
                 // YENİ: Kaydedilenler ekranına gitme butonu
                 IconButton(
                   icon: const Icon(Icons.bookmark_border_outlined),

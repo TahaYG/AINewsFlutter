@@ -7,10 +7,13 @@ class AuthService extends ChangeNotifier {
   final ApiService _apiService = ApiService();
 
   String? _token;
+  List<String> _roles = [];
   bool _isLoggedIn = false;
 
   String? get token => _token;
   bool get isLoggedIn => _isLoggedIn;
+  bool get isAdmin => _roles.contains('Admin');
+  bool get isModerator => _roles.contains('Moderator');
 
   // Uygulama açıldığında token var mı diye kontrol et
   Future<void> initAuth() async {
@@ -25,10 +28,11 @@ class AuthService extends ChangeNotifier {
 
   Future<bool> login(String username, String password) async {
     try {
-      final token = await _apiService.login(username, password);
-      if (token != null) {
-        await _storage.write(key: 'auth_token', value: token);
-        _token = token;
+      // DEĞİŞİKLİK: ApiService'ten artık Map olarak veri bekliyoruz.
+      final authData = await _apiService.login(username, password);
+      if (authData != null) {
+        _token = authData['token'];
+        _roles = authData['roles']; // Rolleri state'e ata
         _isLoggedIn = true;
         notifyListeners();
         return true;
@@ -42,7 +46,9 @@ class AuthService extends ChangeNotifier {
 
   Future<void> logout() async {
     await _storage.delete(key: 'auth_token');
+    await _storage.delete(key: 'user_roles'); // Çıkış yaparken rolleri de sil
     _token = null;
+    _roles = [];
     _isLoggedIn = false;
     notifyListeners();
   }
