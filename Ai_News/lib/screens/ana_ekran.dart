@@ -7,6 +7,7 @@ import '../utils/icon_helper.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import 'kaydedilenler_ekrani.dart';
+import 'profil_ekrani.dart';
 
 class AnaEkran extends StatefulWidget {
   const AnaEkran({super.key});
@@ -131,10 +132,14 @@ class _AnaEkranState extends State<AnaEkran> {
                 ),
                 // YENİ: Çıkış yapma butonu
                 IconButton(
-                  icon: const Icon(Icons.logout),
-                  tooltip: 'Çıkış Yap',
+                  icon: const Icon(Icons.account_circle_outlined),
+                  tooltip: 'Profil',
                   onPressed: () {
-                    Provider.of<AuthService>(context, listen: false).logout();
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ProfilEkrani()),
+                    );
                   },
                 ),
               ],

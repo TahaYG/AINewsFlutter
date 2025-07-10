@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../services/api_service.dart'; // ApiService'i kullanmak için
+import '../services/api_service.dart';
 
 class KayitEkrani extends StatefulWidget {
   const KayitEkrani({super.key});
@@ -23,13 +23,15 @@ class _KayitEkraniState extends State<KayitEkrani> {
       _isLoading = true;
     });
 
-    bool success = await _apiService.register(
+    // === DEĞİŞİKLİK BURADA: Artık bool yerine String? bekliyoruz ===
+    final String? errorMessage = await _apiService.register(
       _usernameController.text,
       _passwordController.text,
     );
 
     if (mounted) {
-      if (success) {
+      // Eğer errorMessage null ise, işlem başarılıdır.
+      if (errorMessage == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
               content: Text('Kayıt başarılı! Şimdi giriş yapabilirsiniz.'),
@@ -38,11 +40,9 @@ class _KayitEkraniState extends State<KayitEkrani> {
         Navigator.of(context)
             .pop(); // Kayıt başarılıysa giriş ekranına geri dön
       } else {
+        // Eğer bir hata mesajı varsa, onu göster.
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content:
-                  Text('Kayıt başarısız! Bu kullanıcı adı alınmış olabilir.'),
-              backgroundColor: Colors.red),
+          SnackBar(content: Text(errorMessage), backgroundColor: Colors.red),
         );
       }
       setState(() {
@@ -65,7 +65,8 @@ class _KayitEkraniState extends State<KayitEkrani> {
               children: [
                 TextFormField(
                   controller: _usernameController,
-                  decoration: const InputDecoration(labelText: 'Kullanıcı Adı'),
+                  decoration: const InputDecoration(
+                      labelText: 'Kullanıcı Adı (E-posta)'),
                   validator: (value) => value!.isEmpty
                       ? 'Lütfen bir kullanıcı adı belirleyin.'
                       : null,

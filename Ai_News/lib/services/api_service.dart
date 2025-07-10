@@ -5,24 +5,19 @@ import '../models/kategori.dart';
 import '../models/haber.dart';
 
 class ApiService {
-  static const String _baseUrl = 'http://10.0.2.2:5203';
+  static const String _baseUrl = 'http://10.0.2.2:5175';
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
-  // YENİ: Korumalı API'lere istek atarken token'ı header'a ekleyen yardımcı metot
   Future<Map<String, String>> _getHeaders() async {
     final token = await _storage.read(key: 'auth_token');
+    final headers = {'Content-Type': 'application/json; charset=UTF-8'};
     if (token != null) {
-      return {
-        'Content-Type': 'application/json; charset=UTF-8',
-        'Authorization': 'Bearer $token',
-      };
+      headers['Authorization'] = 'Bearer $token';
     }
-    return {
-      'Content-Type': 'application/json; charset=UTF-8',
-    };
+    return headers;
   }
 
-  // --- YENİ AUTH METOTLARI ---
+  // --- AUTH METOTLARI (DÜZELTİLMİŞ) ---
   Future<Map<String, dynamic>?> login(String username, String password) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/api/Auth/login'),
@@ -31,37 +26,44 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
+      // DEĞİŞİKLİK: API'den gelen tüm yanıtı bir değişkene alıyoruz.
       final responseData = jsonDecode(response.body);
-      final token = responseData['token'];
-      final roles = List<String>.from(responseData['roles']);
 
-      // Token'ı ve rolleri güvenli depolamaya yaz
-      await _storage.write(key: 'auth_token', value: token);
+      // DEĞİŞİKLİK: Gelen tüm verileri (token, roller, kullanıcı adı)
+      // güvenli depolamaya yazıyoruz.
+      await _storage.write(key: 'auth_token', value: responseData['token']);
       await _storage.write(
-          key: 'user_roles',
-          value: jsonEncode(roles)); // Rolleri JSON string olarak sakla
+          key: 'user_roles', value: jsonEncode(responseData['roles']));
+      await _storage.write(key: 'username', value: responseData['username']);
 
-      return {'token': token, 'roles': roles};
+      // DEĞİŞİKLİK: Sadece bir kısmını değil, tüm veriyi geri döndürüyoruz.
+      return responseData;
     }
     return null;
   }
 
-  Future<bool> register(String username, String password) async {
+  // DEĞİŞİKLİK: Metot artık hata mesajını döndürüyor.
+  Future<String?> register(String username, String password) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/api/Auth/register'),
-      headers: {'Content-Type': 'application/json; charset=UTF-8'},
+      headers: await _getHeaders(),
       body: jsonEncode({'username': username, 'password': password}),
     );
-    return response.statusCode == 200;
+    if (response.statusCode == 200) return null; // Başarılıysa null döndür.
+
+    try {
+      // Başarısızsa hata mesajını döndür.
+      return jsonDecode(response.body)['message'] ??
+          'Bilinmeyen bir kayıt hatası.';
+    } catch (e) {
+      return 'Sunucu hatası: ${response.statusCode}';
+    }
   }
 
-  // --- YENİ YER İŞARETİ METOTLARI (KORUMALI) ---
+  // --- YER İŞARETİ METOTLARI (Değişiklik yok) ---
   Future<List<Haber>> getYerIsaretliHaberler() async {
-    final response = await http.get(
-      Uri.parse('$_baseUrl/api/YerIsaretleri'),
-      headers: await _getHeaders(), // Token'lı header kullanılıyor
-    );
-
+    final response = await http.get(Uri.parse('$_baseUrl/api/YerIsaretleri'),
+        headers: await _getHeaders());
     if (response.statusCode == 200) {
       List<dynamic> body = jsonDecode(utf8.decode(response.bodyBytes));
       return body.map((dynamic item) => Haber.fromJson(item)).toList();
@@ -71,21 +73,16 @@ class ApiService {
   }
 
   Future<void> yerIsaretiEkle(int haberId) async {
-    // Bu metodun başarılı olup olmadığını kontrol etmek için response'u alabiliriz.
-    await http.post(
-      Uri.parse('$_baseUrl/api/YerIsaretleri/$haberId'),
-      headers: await _getHeaders(),
-    );
+    await http.post(Uri.parse('$_baseUrl/api/YerIsaretleri/$haberId'),
+        headers: await _getHeaders());
   }
 
   Future<void> yerIsaretiSil(int haberId) async {
-    await http.delete(
-      Uri.parse('$_baseUrl/api/YerIsaretleri/$haberId'),
-      headers: await _getHeaders(),
-    );
+    await http.delete(Uri.parse('$_baseUrl/api/YerIsaretleri/$haberId'),
+        headers: await _getHeaders());
   }
 
-  // --- MEVCUT METOTLARINIZ ---
+  // --- MEVCUT METOTLARINIZ (Değişiklik yok) ---
   Future<List<Kategori>> getKategoriler() async {
     final response = await http.get(Uri.parse('$_baseUrl/api/Kategoriler'));
     if (response.statusCode == 200) {
