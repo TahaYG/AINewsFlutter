@@ -6,6 +6,7 @@ import '../models/haber.dart';
 
 class ApiService {
   static const String _baseUrl = 'http://10.0.2.2:5175';
+  static const int _pageSize = 10;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
   Future<Map<String, String>> _getHeaders() async {
@@ -94,11 +95,33 @@ class ApiService {
     }
   }
 
-  Future<List<Haber>> getHaberler() async {
-    final response = await http.get(Uri.parse('$_baseUrl/api/Haberler'));
+  Future<PagedHaberResult> getHaberler(
+      {int pageNumber = 1, int? kategoriId}) async {
+    final kategoriQuery = (kategoriId != null && kategoriId != 0)
+        ? '&kategoriId=$kategoriId'
+        : '';
+
+    // YENİ: Cache-busting için URL'nin sonuna benzersiz bir parametre ekliyoruz.
+    // O anki milisaniye cinsinden zamanı eklemek, her URL'yi benzersiz kılar.
+    final cacheBuster = '&_cb=${DateTime.now().millisecondsSinceEpoch}';
+
+    final url =
+        '$_baseUrl/api/Haberler?pageNumber=$pageNumber&pageSize=$_pageSize$kategoriQuery$cacheBuster';
+
+    print("İstek atılan URL: $url"); // Hata ayıklama için URL'yi yazdır.
+
+    final response = await http.get(Uri.parse(url));
+
     if (response.statusCode == 200) {
-      List<dynamic> body = jsonDecode(utf8.decode(response.bodyBytes));
-      return body.map((dynamic item) => Haber.fromJson(item)).toList();
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      final List<dynamic> items = data['items'];
+      final List<Haber> haberler =
+          items.map((item) => Haber.fromJson(item)).toList();
+
+      final pagination = data['pagination'];
+      final bool sonSayfaMi = !(pagination['hasNextPage'] ?? false);
+
+      return PagedHaberResult(haberler: haberler, sonSayfaMi: sonSayfaMi);
     } else {
       throw Exception(
           'Haberler yüklenemedi. Hata kodu: ${response.statusCode}');

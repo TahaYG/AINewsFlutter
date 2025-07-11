@@ -32,3 +32,10 @@ class Haber {
     );
   }
 }
+
+class PagedHaberResult {
+  final List<Haber> haberler;
+  final bool sonSayfaMi;
+
+  PagedHaberResult({required this.haberler, required this.sonSayfaMi});
+}

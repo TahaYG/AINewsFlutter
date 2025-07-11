@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:infinite_scroll_pagination/infinite_scroll_pagination.dart';
+import 'package:provider/provider.dart';
 import '../models/kategori.dart';
 import '../models/haber.dart';
 import '../services/api_service.dart';
 import '../widgets/haber_karti.dart';
 import '../utils/icon_helper.dart';
-import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import 'kaydedilenler_ekrani.dart';
 import 'profil_ekrani.dart';
 
 class AnaEkran extends StatefulWidget {
   const AnaEkran({super.key});
-
   @override
   State<AnaEkran> createState() => _AnaEkranState();
 }
@@ -19,41 +19,74 @@ class AnaEkran extends StatefulWidget {
 class _AnaEkranState extends State<AnaEkran> {
   final ApiService _apiService = ApiService();
   late Future<List<Kategori>> _kategorilerFuture;
-  late Future<List<Haber>> _haberlerFuture;
+
+  final Map<int, PagingController<int, Haber>> _pagingControllers = {};
 
   @override
   void initState() {
     super.initState();
-    _yenile();
+    _kategorilerFuture = _apiService.getKategoriler();
+    _kategorilerFuture.then((kategoriler) {
+      if (mounted) {
+        _setupPagingController(0); // "Tümü" sekmesi için
+        for (var kategori in kategoriler) {
+          _setupPagingController(kategori.id);
+        }
+        setState(() {});
+      }
+    });
   }
 
-  // DEĞİŞİKLİK: Metodun dönüş tipi Future<void> olarak güncellendi.
-  // Bu, RefreshIndicator'ın ne zaman duracağını bilmesini sağlar.
-  Future<void> _yenile() async {
-    setState(() {
-      _kategorilerFuture = _apiService.getKategoriler();
-      _haberlerFuture = _apiService.getHaberler();
+  void _setupPagingController(int kategoriId) {
+    final controller = PagingController<int, Haber>(firstPageKey: 1);
+    controller.addPageRequestListener((pageKey) {
+      _fetchPage(pageKey, kategoriId, controller);
     });
-    // İki API isteğinin de tamamlanmasını bekle
-    await Future.wait([_kategorilerFuture, _haberlerFuture]);
+    _pagingControllers[kategoriId] = controller;
+  }
+
+  Future<void> _fetchPage(int pageKey, int kategoriId,
+      PagingController<int, Haber> controller) async {
+    try {
+      final yeniSayfa = await _apiService.getHaberler(
+          pageNumber: pageKey, kategoriId: kategoriId);
+      final isLastPage = yeniSayfa.sonSayfaMi;
+      if (isLastPage) {
+        controller.appendLastPage(yeniSayfa.haberler);
+      } else {
+        final nextPageKey = pageKey + 1;
+        controller.appendPage(yeniSayfa.haberler, nextPageKey);
+      }
+    } catch (error) {
+      controller.error = error;
+    }
+  }
+
+  @override
+  void dispose() {
+    _pagingControllers.forEach((_, controller) {
+      controller.dispose();
+    });
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final authService = Provider.of<AuthService>(context, listen: false);
-
+    final authService = Provider.of<AuthService>(context);
     return FutureBuilder<List<Kategori>>(
       future: _kategorilerFuture,
       builder: (context, kategoriSnapshot) {
         if (kategoriSnapshot.connectionState == ConnectionState.waiting) {
           return Scaffold(
-              appBar: AppBar(),
+              appBar: AppBar(title: const Text('AI Haber Motoru')),
               body: const Center(child: CircularProgressIndicator()));
         }
         if (kategoriSnapshot.hasError) {
           return Scaffold(
               appBar: AppBar(title: const Text('Hata')),
-              body: Center(child: Text('Hata: ${kategoriSnapshot.error}')));
+              body: Center(
+                  child: Text(
+                      'Kategoriler yüklenemedi: ${kategoriSnapshot.error}')));
         }
         if (!kategoriSnapshot.hasData || kategoriSnapshot.data!.isEmpty) {
           return Scaffold(
@@ -68,31 +101,19 @@ class _AnaEkranState extends State<AnaEkran> {
           length: tumKategoriler.length,
           child: Scaffold(
             appBar: AppBar(
-              title: const Row(
-                children: [
-                  Icon(Icons.smart_toy_outlined),
-                  SizedBox(width: 8),
-                  Text('news.ai'),
-                ],
-              ),
-              // DEĞİŞİKLİK: Manuel yenileme butonu kaldırıldı.
+              title: const Text('AI Haber Motoru'),
+              // === DEĞİŞİKLİK: Tüm butonlar geri eklendi ===
               actions: [
                 if (authService.isAdmin)
                   Padding(
                     padding: const EdgeInsets.only(right: 8.0),
                     child: Chip(
-                      avatar: Icon(
-                        Icons.admin_panel_settings,
-                        size: 18,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
-                      label: Text(
-                        'Admin',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
-                      ),
+                      avatar: const Icon(Icons.admin_panel_settings_outlined,
+                          size: 18, color: Colors.white),
+                      label: const Text('Admin',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white)),
                       backgroundColor: Colors.red[700],
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       visualDensity: VisualDensity.compact,
@@ -104,116 +125,80 @@ class _AnaEkranState extends State<AnaEkran> {
                     child: Chip(
                       avatar: const Icon(Icons.security_outlined,
                           size: 18, color: Colors.white),
-                      label: const Text('Mod',
+                      label: const Text('Moderatör',
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               color: Colors.white)),
-                      backgroundColor: Colors.orange[700], // Farklı bir renk
+                      backgroundColor: Colors.orange[700],
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       visualDensity: VisualDensity.compact,
                     ),
                   ),
-                // YENİ: Kaydedilenler ekranına gitme butonu
                 IconButton(
                   icon: const Icon(Icons.bookmark_border_outlined),
                   tooltip: 'Kaydedilenler',
                   onPressed: () async {
                     await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const KaydedilenlerEkrani()),
-                    );
-                    // Kaydedilenler ekranından geri dönüldüğünde ana ekranı yenile
-                    _yenile();
+                        context,
+                        MaterialPageRoute(
+                            builder: (c) => const KaydedilenlerEkrani()));
+                    // Kaydedilenler ekranından dönüldüğünde tüm listeleri yenile
+                    _pagingControllers
+                        .forEach((_, controller) => controller.refresh());
                   },
                 ),
-                // YENİ: Çıkış yapma butonu
                 IconButton(
                   icon: const Icon(Icons.account_circle_outlined),
                   tooltip: 'Profil',
                   onPressed: () {
                     Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const ProfilEkrani()),
-                    );
+                        context,
+                        MaterialPageRoute(
+                            builder: (context) => const ProfilEkrani()));
                   },
                 ),
               ],
               bottom: TabBar(
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
-                tabs: tumKategoriler.map((kategori) {
-                  return Tab(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(getIconForCategory(kategori.ad), size: 18),
-                        const SizedBox(width: 8),
-                        Text(kategori.ad.toUpperCase()),
-                      ],
-                    ),
-                  );
-                }).toList(),
+                tabs: tumKategoriler
+                    .map((kategori) => Tab(
+                            child: Row(
+                          children: [
+                            Icon(getIconForCategory(kategori.ad), size: 18),
+                            const SizedBox(width: 8),
+                            Text(kategori.ad.toUpperCase())
+                          ],
+                        )))
+                    .toList(),
               ),
             ),
-            body: FutureBuilder<List<Haber>>(
-              future: _haberlerFuture,
-              builder: (context, haberSnapshot) {
-                if (haberSnapshot.connectionState == ConnectionState.waiting) {
+            body: TabBarView(
+              children: tumKategoriler.map((kategori) {
+                final controller = _pagingControllers[kategori.id];
+                if (controller == null) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                if (haberSnapshot.hasError) {
-                  return Center(
-                      child:
-                          Text('Haberler yüklenemedi: ${haberSnapshot.error}'));
-                }
-                if (!haberSnapshot.hasData || haberSnapshot.data!.isEmpty) {
-                  return const Center(child: Text('Hiç haber bulunamadı.'));
-                }
 
-                final tumHaberler = haberSnapshot.data!;
-                tumHaberler
-                    .sort((a, b) => b.yayinTarihi.compareTo(a.yayinTarihi));
-
-                return TabBarView(
-                  children: tumKategoriler.map((kategori) {
-                    final filtrelenmisHaberler = kategori.id == 0
-                        ? tumHaberler
-                        : tumHaberler
-                            .where((haber) => haber.kategoriId == kategori.id)
-                            .toList();
-
-                    if (filtrelenmisHaberler.isEmpty) {
-                      return Center(
-                          child: Text(
-                              '${kategori.ad} kategorisinde gösterilecek onaylı haber bulunamadı.'));
-                    }
-
-                    // === DEĞİŞİKLİK: ListView.builder, RefreshIndicator ile sarmalandı ===
-                    return RefreshIndicator(
-                      onRefresh:
-                          _yenile, // Aşağı çekildiğinde _yenile fonksiyonunu çağırır.
-                      child: ListView.builder(
-                        // ListView'in her zaman kaydırılabilir olmasını sağlar,
-                        // böylece az haber varken bile yenileme çalışır.
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        itemCount: filtrelenmisHaberler.length,
-                        itemBuilder: (context, index) {
-                          final haber = filtrelenmisHaberler[index];
-                          // HATA DÜZELTMESİ: HaberKarti artık 'kategoriAdi' parametresi almadığı için
-                          // ilgili satırlar kaldırıldı.
-                          return HaberKarti(
-                            haber: haber,
-                            onGeriDonuldu: _yenile,
-                          );
-                        },
+                return RefreshIndicator(
+                  onRefresh: () => Future.sync(() => controller.refresh()),
+                  child: PagedListView<int, Haber>(
+                    pagingController: controller,
+                    builderDelegate: PagedChildBuilderDelegate<Haber>(
+                      itemBuilder: (context, haber, index) => HaberKarti(
+                        haber: haber,
+                        onGeriDonuldu: () => controller.refresh(),
                       ),
-                    );
-                  }).toList(),
+                      firstPageErrorIndicatorBuilder: (context) => Center(
+                          child: Text(
+                              'İlk sayfa yüklenemedi: ${controller.error}')),
+                      noItemsFoundIndicatorBuilder: (context) => Center(
+                          child: Text(
+                              '${kategori.ad} kategorisinde haber bulunamadı.')),
+                    ),
+                  ),
                 );
-              },
+              }).toList(),
             ),
           ),
         );
