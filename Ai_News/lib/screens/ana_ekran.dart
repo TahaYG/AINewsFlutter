@@ -93,10 +93,7 @@ class _AnaEkranState extends State<AnaEkran> {
                           color: Theme.of(context).colorScheme.onPrimary,
                         ),
                       ),
-                      backgroundColor: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withOpacity(0.8),
+                      backgroundColor: Colors.red[700],
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       visualDensity: VisualDensity.compact,
                     ),
@@ -105,7 +102,7 @@ class _AnaEkranState extends State<AnaEkran> {
                   Padding(
                     padding: const EdgeInsets.only(right: 8.0),
                     child: Chip(
-                      avatar: Icon(Icons.security_outlined,
+                      avatar: const Icon(Icons.security_outlined,
                           size: 18, color: Colors.white),
                       label: const Text('Mod',
                           style: TextStyle(

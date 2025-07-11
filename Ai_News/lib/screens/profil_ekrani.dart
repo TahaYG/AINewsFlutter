@@ -26,15 +26,10 @@ class ProfilEkrani extends StatelessWidget {
             children: [
               const SizedBox(height: 20),
               // Profil ikonu
-              CircleAvatar(
-                radius: 50,
-                backgroundColor:
-                    Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                child: Icon(
-                  Icons.person_outline,
-                  size: 50,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
+              Text(
+                "Kullanıcı Adı:",
+                style:
+                    GoogleFonts.lato(fontSize: 32, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
               // Kullanıcı adı
