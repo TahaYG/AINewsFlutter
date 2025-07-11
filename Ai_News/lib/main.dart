@@ -12,8 +12,12 @@ void main() async {
   await initializeDateFormatting('tr_TR', null);
 
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => AuthService()..initAuth(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => AuthService()..initAuth()),
+        ChangeNotifierProvider(
+            create: (context) => TtsService()), // YENİ: TtsService eklendi.
+      ],
       child: const HaberUygulamasi(),
     ),
   );

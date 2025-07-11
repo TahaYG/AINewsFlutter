@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/tts_service.dart';
 
 class ProfilEkrani extends StatelessWidget {
   const ProfilEkrani({super.key});
@@ -67,10 +68,11 @@ class ProfilEkrani extends StatelessWidget {
                   icon: const Icon(Icons.logout),
                   label: const Text('Çıkış Yap'),
                   onPressed: () {
-                    // Önce çıkış yapma işlemini çağır.
-                    authService.logout();
-                    // Ardından, bu ekran dahil tüm ekranları kapatıp
-                    // uygulama başlangıcına (Giriş Ekranı'na) dön.
+                    // === DEĞİŞİKLİK BURADA ===
+                    // 1. Önce sesli okumayı durdur.
+                    Provider.of<TtsService>(context, listen: false).stop();
+                    // 2. Sonra çıkış yap.
+                    Provider.of<AuthService>(context, listen: false).logout();
                     Navigator.of(context).popUntil((route) => route.isFirst);
                   },
                   style: ElevatedButton.styleFrom(

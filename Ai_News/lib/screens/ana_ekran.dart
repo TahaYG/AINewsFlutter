@@ -7,9 +7,9 @@ import '../services/api_service.dart';
 import '../widgets/haber_karti.dart';
 import '../utils/icon_helper.dart';
 import '../services/auth_service.dart';
+import '../services/tts_service.dart';
 import 'kaydedilenler_ekrani.dart';
 import 'profil_ekrani.dart';
-import '../services/tts_service.dart';
 
 class AnaEkran extends StatefulWidget {
   const AnaEkran({super.key});
@@ -17,13 +17,12 @@ class AnaEkran extends StatefulWidget {
   State<AnaEkran> createState() => _AnaEkranState();
 }
 
-class _AnaEkranState extends State<AnaEkran> {
+class _AnaEkranState extends State<AnaEkran>
+    with SingleTickerProviderStateMixin {
   final ApiService _apiService = ApiService();
   late Future<List<Kategori>> _kategorilerFuture;
 
   final Map<int, PagingController<int, Haber>> _pagingControllers = {};
-
-  final TtsService _ttsService = TtsService();
   TabController? _tabController;
 
   @override
@@ -32,7 +31,6 @@ class _AnaEkranState extends State<AnaEkran> {
     _kategorilerFuture = _apiService.getKategoriler();
     _kategorilerFuture.then((kategoriler) {
       if (mounted) {
-        // TabController'ı kategoriler yüklendikten sonra oluşturuyoruz.
         _tabController =
             TabController(length: kategoriler.length + 1, vsync: this);
         _tabController!.addListener(_handleTabSelection);
@@ -40,21 +38,15 @@ class _AnaEkranState extends State<AnaEkran> {
         for (var kategori in kategoriler) {
           _setupPagingController(kategori.id);
         }
-        setState(() {});
-      }
-    });
-    // YENİ: TTS servisindeki değişiklikleri dinleyip arayüzü güncellemek için.
-    _ttsService.addListener(() {
-      if (mounted) {
-        setState(() {});
+        setState(() {}); // TabController oluşturulduktan sonra arayüzü güncelle
       }
     });
   }
 
-  // YENİ: Sekme değiştiğinde sesli okumayı durduran metot.
   void _handleTabSelection() {
+    // Sekme değiştiğinde, devam eden bir okuma varsa durdur.
     if (_tabController!.indexIsChanging) {
-      _ttsService.stop();
+      Provider.of<TtsService>(context, listen: false).stop();
     }
   }
 
@@ -88,17 +80,19 @@ class _AnaEkranState extends State<AnaEkran> {
     _pagingControllers.forEach((_, controller) => controller.dispose());
     _tabController?.removeListener(_handleTabSelection);
     _tabController?.dispose();
-    _ttsService.dispose(); // Servisi temizle
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final ttsService = Provider.of<TtsService>(context);
+
     return FutureBuilder<List<Kategori>>(
       future: _kategorilerFuture,
       builder: (context, kategoriSnapshot) {
-        if (kategoriSnapshot.connectionState == ConnectionState.waiting) {
+        if (kategoriSnapshot.connectionState == ConnectionState.waiting ||
+            _tabController == null) {
           return Scaffold(
               appBar: AppBar(title: const Text('AI Haber Motoru')),
               body: const Center(child: CircularProgressIndicator()));
@@ -119,139 +113,146 @@ class _AnaEkranState extends State<AnaEkran> {
         final kategoriler = kategoriSnapshot.data!;
         final tumKategoriler = [Kategori(id: 0, ad: 'Tümü'), ...kategoriler];
 
-        return DefaultTabController(
-          length: tumKategoriler.length,
-          child: Scaffold(
-            appBar: AppBar(
-              title: const Text('AI Haber Motoru'),
-              // === DEĞİŞİKLİK: Tüm butonlar geri eklendi ===
-              actions: [
-                IconButton(
-                  icon: Icon(
-                    _ttsService.isPlaying
-                        ? Icons.stop_circle_outlined
-                        : Icons.playlist_play_outlined,
-                    color: _ttsService.isPlaying
-                        ? Colors.red
-                        : Theme.of(context).colorScheme.primary,
-                  ),
-                  tooltip:
-                      _ttsService.isPlaying ? 'Okumayı Durdur' : 'Tümünü Oku',
-                  onPressed: () {
-                    if (_ttsService.isPlaying) {
-                      _ttsService.stop();
-                    } else {
-                      // Aktif sekmedeki haberleri al ve okut
-                      final activeTabIndex = _tabController?.index ?? 0;
-                      final activeKategoriId =
-                          tumKategoriler[activeTabIndex].id;
-                      final activeController =
-                          _pagingControllers[activeKategoriId];
-                      if (activeController?.itemList != null &&
-                          activeController!.itemList!.isNotEmpty) {
-                        _ttsService.speakList(activeController.itemList!);
-                      }
-                    }
-                  },
-                ),
-                if (authService.isAdmin)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: Chip(
-                      avatar: const Icon(Icons.admin_panel_settings_outlined,
-                          size: 18, color: Colors.white),
-                      label: const Text('Admin',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white)),
-                      backgroundColor: Colors.red[700],
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ),
-                if (!authService.isAdmin && authService.isModerator)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: Chip(
-                      avatar: const Icon(Icons.security_outlined,
-                          size: 18, color: Colors.white),
-                      label: const Text('Moderatör',
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white)),
-                      backgroundColor: Colors.orange[700],
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  ),
-                IconButton(
-                  icon: const Icon(Icons.bookmark_border_outlined),
-                  tooltip: 'Kaydedilenler',
-                  onPressed: () async {
-                    await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (c) => const KaydedilenlerEkrani()));
-                    // Kaydedilenler ekranından dönüldüğünde tüm listeleri yenile
-                    _pagingControllers
-                        .forEach((_, controller) => controller.refresh());
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.account_circle_outlined),
-                  tooltip: 'Profil',
-                  onPressed: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const ProfilEkrani()));
-                  },
-                ),
+        // DEĞİŞİKLİK: DefaultTabController kaldırıldı. Artık kendi controller'ımızı kullanıyoruz.
+        return Scaffold(
+          appBar: AppBar(
+            title: const Row(
+              children: [
+                Icon(Icons.smart_toy_outlined),
+                SizedBox(width: 8),
+                Text('news.ai'),
               ],
-              bottom: TabBar(
-                controller: _tabController,
-                isScrollable: true,
-                tabAlignment: TabAlignment.start,
-                tabs: tumKategoriler
-                    .map((kategori) => Tab(
-                            child: Row(
+            ),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  ttsService.isPlaying && ttsService.playbackId == -1
+                      ? Icons.stop_circle_outlined
+                      : Icons.playlist_play_outlined,
+                  color: ttsService.isPlaying && ttsService.playbackId == -1
+                      ? Colors.red
+                      : Theme.of(context).colorScheme.primary,
+                ),
+                tooltip: ttsService.isPlaying && ttsService.playbackId == -1
+                    ? 'Okumayı Durdur'
+                    : 'Bu Sekmeyi Oku',
+                onPressed: () {
+                  if (ttsService.isPlaying) {
+                    ttsService.stop();
+                  } else {
+                    final activeTabIndex = _tabController?.index ?? 0;
+                    final activeKategoriId = tumKategoriler[activeTabIndex].id;
+                    final activeController =
+                        _pagingControllers[activeKategoriId];
+                    if (activeController?.itemList != null &&
+                        activeController!.itemList!.isNotEmpty) {
+                      ttsService.speakList(activeController.itemList!);
+                    }
+                  }
+                },
+              ),
+              if (authService.isAdmin)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Chip(
+                    avatar: Icon(
+                      Icons.admin_panel_settings,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                    label: const Text(
+                      'Admin',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                    backgroundColor: Colors.red[700],
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              if (!authService.isAdmin && authService.isModerator)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Chip(
+                    avatar: const Icon(Icons.security_outlined,
+                        size: 18, color: Colors.white),
+                    label: const Text('Mod',
+                        style: TextStyle(
+                            fontWeight: FontWeight.bold, color: Colors.white)),
+                    backgroundColor: Colors.orange[700],
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                ),
+              IconButton(
+                icon: const Icon(Icons.bookmark_border_outlined),
+                tooltip: 'Kaydedilenler',
+                onPressed: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const KaydedilenlerEkrani()),
+                  );
+                  _pagingControllers
+                      .forEach((_, controller) => controller.refresh());
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.account_circle_outlined),
+                tooltip: 'Profil',
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => const ProfilEkrani()),
+                  );
+                },
+              ),
+            ],
+            bottom: TabBar(
+              controller: _tabController,
+              isScrollable: true,
+              tabAlignment: TabAlignment.start,
+              tabs: tumKategoriler
+                  .map((kategori) => Tab(
+                        child: Row(
                           children: [
                             Icon(getIconForCategory(kategori.ad), size: 18),
                             const SizedBox(width: 8),
                             Text(kategori.ad.toUpperCase())
                           ],
-                        )))
-                    .toList(),
-              ),
+                        ),
+                      ))
+                  .toList(),
             ),
-            body: TabBarView(
-              controller: _tabController,
-              children: tumKategoriler.map((kategori) {
-                final controller = _pagingControllers[kategori.id];
-                if (controller == null) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+          ),
+          body: TabBarView(
+            controller: _tabController,
+            children: tumKategoriler.map((kategori) {
+              final controller = _pagingControllers[kategori.id];
+              if (controller == null) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-                return RefreshIndicator(
-                  onRefresh: () => Future.sync(() => controller.refresh()),
-                  child: PagedListView<int, Haber>(
-                    pagingController: controller,
-                    builderDelegate: PagedChildBuilderDelegate<Haber>(
-                      itemBuilder: (context, haber, index) => HaberKarti(
-                        haber: haber,
-                        onGeriDonuldu: () => controller.refresh(),
-                      ),
-                      firstPageErrorIndicatorBuilder: (context) => Center(
-                          child: Text(
-                              'İlk sayfa yüklenemedi: ${controller.error}')),
-                      noItemsFoundIndicatorBuilder: (context) => Center(
-                          child: Text(
-                              '${kategori.ad} kategorisinde haber bulunamadı.')),
+              return RefreshIndicator(
+                onRefresh: () => Future.sync(() => controller.refresh()),
+                child: PagedListView<int, Haber>(
+                  pagingController: controller,
+                  builderDelegate: PagedChildBuilderDelegate<Haber>(
+                    itemBuilder: (context, haber, index) => HaberKarti(
+                      haber: haber,
+                      onGeriDonuldu: () => controller.refresh(),
                     ),
+                    firstPageErrorIndicatorBuilder: (context) => Center(
+                        child:
+                            Text('İlk sayfa yüklenemedi: ${controller.error}')),
+                    noItemsFoundIndicatorBuilder: (context) => Center(
+                        child: Text(
+                            '${kategori.ad} kategorisinde haber bulunamadı.')),
                   ),
-                );
-              }).toList(),
-            ),
+                ),
+              );
+            }).toList(),
           ),
         );
       },
