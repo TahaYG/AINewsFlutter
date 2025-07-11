@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'services/auth_service.dart';
 import 'screens/ana_ekran.dart';
 import 'screens/giris_ekrani.dart';
+import 'services/tts_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

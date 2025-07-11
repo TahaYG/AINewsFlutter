@@ -9,6 +9,7 @@ import '../utils/icon_helper.dart';
 import '../services/auth_service.dart';
 import 'kaydedilenler_ekrani.dart';
 import 'profil_ekrani.dart';
+import '../services/tts_service.dart';
 
 class AnaEkran extends StatefulWidget {
   const AnaEkran({super.key});
@@ -22,12 +23,19 @@ class _AnaEkranState extends State<AnaEkran> {
 
   final Map<int, PagingController<int, Haber>> _pagingControllers = {};
 
+  final TtsService _ttsService = TtsService();
+  TabController? _tabController;
+
   @override
   void initState() {
     super.initState();
     _kategorilerFuture = _apiService.getKategoriler();
     _kategorilerFuture.then((kategoriler) {
       if (mounted) {
+        // TabController'ı kategoriler yüklendikten sonra oluşturuyoruz.
+        _tabController =
+            TabController(length: kategoriler.length + 1, vsync: this);
+        _tabController!.addListener(_handleTabSelection);
         _setupPagingController(0); // "Tümü" sekmesi için
         for (var kategori in kategoriler) {
           _setupPagingController(kategori.id);
@@ -35,6 +43,19 @@ class _AnaEkranState extends State<AnaEkran> {
         setState(() {});
       }
     });
+    // YENİ: TTS servisindeki değişiklikleri dinleyip arayüzü güncellemek için.
+    _ttsService.addListener(() {
+      if (mounted) {
+        setState(() {});
+      }
+    });
+  }
+
+  // YENİ: Sekme değiştiğinde sesli okumayı durduran metot.
+  void _handleTabSelection() {
+    if (_tabController!.indexIsChanging) {
+      _ttsService.stop();
+    }
   }
 
   void _setupPagingController(int kategoriId) {
@@ -64,9 +85,10 @@ class _AnaEkranState extends State<AnaEkran> {
 
   @override
   void dispose() {
-    _pagingControllers.forEach((_, controller) {
-      controller.dispose();
-    });
+    _pagingControllers.forEach((_, controller) => controller.dispose());
+    _tabController?.removeListener(_handleTabSelection);
+    _tabController?.dispose();
+    _ttsService.dispose(); // Servisi temizle
     super.dispose();
   }
 
@@ -104,6 +126,34 @@ class _AnaEkranState extends State<AnaEkran> {
               title: const Text('AI Haber Motoru'),
               // === DEĞİŞİKLİK: Tüm butonlar geri eklendi ===
               actions: [
+                IconButton(
+                  icon: Icon(
+                    _ttsService.isPlaying
+                        ? Icons.stop_circle_outlined
+                        : Icons.playlist_play_outlined,
+                    color: _ttsService.isPlaying
+                        ? Colors.red
+                        : Theme.of(context).colorScheme.primary,
+                  ),
+                  tooltip:
+                      _ttsService.isPlaying ? 'Okumayı Durdur' : 'Tümünü Oku',
+                  onPressed: () {
+                    if (_ttsService.isPlaying) {
+                      _ttsService.stop();
+                    } else {
+                      // Aktif sekmedeki haberleri al ve okut
+                      final activeTabIndex = _tabController?.index ?? 0;
+                      final activeKategoriId =
+                          tumKategoriler[activeTabIndex].id;
+                      final activeController =
+                          _pagingControllers[activeKategoriId];
+                      if (activeController?.itemList != null &&
+                          activeController!.itemList!.isNotEmpty) {
+                        _ttsService.speakList(activeController.itemList!);
+                      }
+                    }
+                  },
+                ),
                 if (authService.isAdmin)
                   Padding(
                     padding: const EdgeInsets.only(right: 8.0),
@@ -159,6 +209,7 @@ class _AnaEkranState extends State<AnaEkran> {
                 ),
               ],
               bottom: TabBar(
+                controller: _tabController,
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
                 tabs: tumKategoriler
@@ -174,6 +225,7 @@ class _AnaEkranState extends State<AnaEkran> {
               ),
             ),
             body: TabBarView(
+              controller: _tabController,
               children: tumKategoriler.map((kategori) {
                 final controller = _pagingControllers[kategori.id];
                 if (controller == null) {

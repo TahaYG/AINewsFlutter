@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/haber.dart';
 import '../services/api_service.dart';
+import '../services/tts_service.dart';
 
 class HaberDetayEkrani extends StatefulWidget {
   final Haber haber;
@@ -17,6 +18,10 @@ class HaberDetayEkrani extends StatefulWidget {
 class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
   Timer? _okunmaSayacTimer;
   final ApiService _apiService = ApiService();
+
+  // YENİ: TTS servisi ve oynatma durumu için değişkenler
+  final TtsService _ttsService = TtsService();
+  bool _isPlaying = false;
 
   // Ekrandaki sayıları anlık olarak tutacak yerel değişkenler
   late int _guncelTiklanmaSayisi;
@@ -58,7 +63,23 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
   void dispose() {
     // Kullanıcı ekrandan ayrılırsa, zamanlayıcıyı iptal et.
     _okunmaSayacTimer?.cancel();
+    _ttsService.stop();
     super.dispose();
+  }
+
+  // YENİ: Oynat/Durdur butonuna basıldığında çalışacak metot
+  void _toggleTts() {
+    setState(() {
+      if (_isPlaying) {
+        _ttsService.stop();
+      } else {
+        // Başlığı ve içeriği birleştirerek oku
+        String okunacakMetin =
+            "${widget.haber.baslik}. ${widget.haber.icerik ?? ''}";
+        _ttsService.speak(okunacakMetin);
+      }
+      _isPlaying = !_isPlaying;
+    });
   }
 
   @override
@@ -87,6 +108,17 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
             // İstatistik Bölümü
             Row(
               children: [
+                IconButton(
+                  icon: Icon(
+                    _isPlaying
+                        ? Icons.pause_circle_filled_outlined
+                        : Icons.play_circle_outline,
+                    color: Theme.of(context).colorScheme.primary,
+                    size: 28,
+                  ),
+                  tooltip: _isPlaying ? 'Durdur' : 'Sesli Oku',
+                  onPressed: _toggleTts,
+                ),
                 // Tarih Bilgisi
                 const Icon(Icons.calendar_today_outlined,
                     size: 14, color: Colors.black54),
