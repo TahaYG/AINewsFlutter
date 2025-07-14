@@ -106,7 +106,7 @@ class ApiService {
     final cacheBuster = '&_cb=${DateTime.now().millisecondsSinceEpoch}';
 
     final url =
-        '$_baseUrl/api/Haberler?pageNumber=$pageNumber&pageSize=$_pageSize$kategoriQuery$cacheBuster';
+        '$_baseUrl/api/Haberler/paged?pageNumber=$pageNumber&pageSize=$_pageSize$kategoriQuery$cacheBuster';
 
     print("İstek atılan URL: $url"); // Hata ayıklama için URL'yi yazdır.
 
