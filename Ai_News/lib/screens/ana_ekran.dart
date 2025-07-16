@@ -10,6 +10,7 @@ import '../services/auth_service.dart';
 import '../services/tts_service.dart';
 import 'kaydedilenler_ekrani.dart';
 import 'profil_ekrani.dart';
+import 'news_player_screen.dart';
 
 class AnaEkran extends StatefulWidget {
   const AnaEkran({super.key});
@@ -129,6 +130,7 @@ class _AnaEkranState extends State<AnaEkran>
                   ttsService.isPlaying && ttsService.playbackId == -1
                       ? Icons.stop_circle_outlined
                       : Icons.playlist_play_outlined,
+                  size: 22,
                   color: ttsService.isPlaying && ttsService.playbackId == -1
                       ? Colors.red
                       : Theme.of(context).colorScheme.primary,
@@ -148,6 +150,30 @@ class _AnaEkranState extends State<AnaEkran>
                         activeController!.itemList!.isNotEmpty) {
                       ttsService.speakList(activeController.itemList!);
                     }
+                  }
+                },
+              ),
+              IconButton(
+                icon: const Icon(Icons.queue_music_rounded, size: 22),
+                tooltip: 'Player',
+                onPressed: () {
+                  final activeTabIndex = _tabController?.index ?? 0;
+                  final activeKategoriId = tumKategoriler[activeTabIndex].id;
+                  final activeController = _pagingControllers[activeKategoriId];
+                  if (activeController?.itemList != null && activeController!.itemList!.isNotEmpty) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => NewsPlayerScreen(
+                          haberler: activeController.itemList!,
+                          initialIndex: 0,
+                        ),
+                      ),
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Bu sekmede oynatılacak haber yok.')),
+                    );
                   }
                 },
               ),
@@ -184,28 +210,45 @@ class _AnaEkranState extends State<AnaEkran>
                     visualDensity: VisualDensity.compact,
                   ),
                 ),
-              IconButton(
-                icon: const Icon(Icons.bookmark_border_outlined),
-                tooltip: 'Kaydedilenler',
-                onPressed: () async {
-                  await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const KaydedilenlerEkrani()),
-                  );
-                  _pagingControllers
-                      .forEach((_, controller) => controller.refresh());
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.account_circle_outlined),
-                tooltip: 'Profil',
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const ProfilEkrani()),
-                  );
+              PopupMenuButton<int>(
+                icon: const Icon(Icons.more_vert, size: 22),
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 3,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.bookmark_border_outlined, size: 18),
+                        const SizedBox(width: 6),
+                        const Text('Kaydedilenler'),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    value: 4,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.account_circle_outlined, size: 18),
+                        const SizedBox(width: 6),
+                        const Text('Profil'),
+                      ],
+                    ),
+                  ),
+                ],
+                onSelected: (value) async {
+                  if (value == 3) {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const KaydedilenlerEkrani()),
+                    );
+                    _pagingControllers.forEach((_, controller) => controller.refresh());
+                  } else if (value == 4) {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const ProfilEkrani()),
+                    );
+                  }
                 },
               ),
             ],
