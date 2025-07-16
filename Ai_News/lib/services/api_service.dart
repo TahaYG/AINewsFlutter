@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:convert';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/kategori.dart';
 import '../models/haber.dart';
 
@@ -9,6 +11,7 @@ class ApiService {
   static const int _pageSize = 10;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
+  // Korumalı API'lere istek atarken token'ı header'a ekleyen yardımcı metot
   Future<Map<String, String>> _getHeaders() async {
     final token = await _storage.read(key: 'auth_token');
     final headers = {'Content-Type': 'application/json; charset=UTF-8'};
@@ -18,7 +21,7 @@ class ApiService {
     return headers;
   }
 
-  // --- AUTH METOTLARI (DÜZELTİLMİŞ) ---
+  // --- AUTH METOTLARI ---
   Future<Map<String, dynamic>?> login(String username, String password) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/api/Auth/login'),
@@ -27,33 +30,24 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      // DEĞİŞİKLİK: API'den gelen tüm yanıtı bir değişkene alıyoruz.
       final responseData = jsonDecode(response.body);
-
-      // DEĞİŞİKLİK: Gelen tüm verileri (token, roller, kullanıcı adı)
-      // güvenli depolamaya yazıyoruz.
       await _storage.write(key: 'auth_token', value: responseData['token']);
       await _storage.write(
           key: 'user_roles', value: jsonEncode(responseData['roles']));
       await _storage.write(key: 'username', value: responseData['username']);
-
-      // DEĞİŞİKLİK: Sadece bir kısmını değil, tüm veriyi geri döndürüyoruz.
       return responseData;
     }
     return null;
   }
 
-  // DEĞİŞİKLİK: Metot artık hata mesajını döndürüyor.
   Future<String?> register(String username, String password) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/api/Auth/register'),
       headers: await _getHeaders(),
       body: jsonEncode({'username': username, 'password': password}),
     );
-    if (response.statusCode == 200) return null; // Başarılıysa null döndür.
-
+    if (response.statusCode == 200) return null;
     try {
-      // Başarısızsa hata mesajını döndür.
       return jsonDecode(response.body)['message'] ??
           'Bilinmeyen bir kayıt hatası.';
     } catch (e) {
@@ -61,7 +55,7 @@ class ApiService {
     }
   }
 
-  // --- YER İŞARETİ METOTLARI (Değişiklik yok) ---
+  // --- YER İŞARETİ METOTLARI ---
   Future<List<Haber>> getYerIsaretliHaberler() async {
     final response = await http.get(Uri.parse('$_baseUrl/api/YerIsaretleri'),
         headers: await _getHeaders());
@@ -83,70 +77,90 @@ class ApiService {
         headers: await _getHeaders());
   }
 
-  // --- MEVCUT METOTLARINIZ (Değişiklik yok) ---
+  // --- GENEL VERİ ÇEKME METOTLARI ---
   Future<List<Kategori>> getKategoriler() async {
-    final response = await http.get(Uri.parse('$_baseUrl/api/Kategoriler'));
-    if (response.statusCode == 200) {
-      List<dynamic> body = jsonDecode(utf8.decode(response.bodyBytes));
-      return body.map((dynamic item) => Kategori.fromJson(item)).toList();
-    } else {
-      throw Exception(
-          'Kategoriler yüklenemedi. Hata kodu: ${response.statusCode}');
+    try {
+      final response = await http
+          .get(Uri.parse('$_baseUrl/api/Kategoriler'))
+          .timeout(const Duration(seconds: 15));
+      if (response.statusCode == 200) {
+        List<dynamic> body = jsonDecode(utf8.decode(response.bodyBytes));
+        return body.map((dynamic item) => Kategori.fromJson(item)).toList();
+      } else {
+        throw Exception(
+            'Kategoriler yüklenemedi. Hata: ${response.statusCode}');
+      }
+    } on TimeoutException {
+      throw Exception('Sunucuya ulaşılamadı. (Timeout)');
+    } on SocketException {
+      throw Exception('Ağ hatası. İnternet bağlantınızı kontrol edin.');
+    } catch (e) {
+      rethrow;
     }
   }
 
+  // === DEĞİŞİKLİK: C# Controller'ınızdaki doğru endpoint'i çağıracak şekilde güncellendi ===
   Future<PagedHaberResult> getHaberler(
       {int pageNumber = 1, int? kategoriId}) async {
     final kategoriQuery = (kategoriId != null && kategoriId != 0)
         ? '&kategoriId=$kategoriId'
         : '';
 
-    // YENİ: Cache-busting için URL'nin sonuna benzersiz bir parametre ekliyoruz.
-    // O anki milisaniye cinsinden zamanı eklemek, her URL'yi benzersiz kılar.
-    final cacheBuster = '&_cb=${DateTime.now().millisecondsSinceEpoch}';
-
+    // DÜZELTME: API'nizdeki Flutter için olan endpoint'in doğru adresi "paged"
     final url =
-        '$_baseUrl/api/Haberler/paged?pageNumber=$pageNumber&pageSize=$_pageSize$kategoriQuery$cacheBuster';
+        '$_baseUrl/api/Haberler/paged?pageNumber=$pageNumber&pageSize=$_pageSize$kategoriQuery';
 
-    print("İstek atılan URL: $url"); // Hata ayıklama için URL'yi yazdır.
+    try {
+      final response =
+          await http.get(Uri.parse(url)).timeout(const Duration(seconds: 20));
 
-    final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(response.bodyBytes));
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(utf8.decode(response.bodyBytes));
-      final List<dynamic> items = data['items'];
-      final List<Haber> haberler =
-          items.map((item) => Haber.fromJson(item)).toList();
+        // API'den gelen PagedResult formatını doğru şekilde işliyoruz
+        final List<dynamic> items = data['items'];
+        final List<Haber> haberler =
+            items.map((item) => Haber.fromJson(item)).toList();
 
-      final pagination = data['pagination'];
-      final bool sonSayfaMi = !(pagination['hasNextPage'] ?? false);
+        final pagination = data['pagination'];
+        final bool sonSayfaMi = !(pagination['hasNextPage'] ?? false);
 
-      return PagedHaberResult(haberler: haberler, sonSayfaMi: sonSayfaMi);
-    } else {
+        return PagedHaberResult(haberler: haberler, sonSayfaMi: sonSayfaMi);
+      } else {
+        throw Exception(
+            'Haberler yüklenemedi. Hata: ${response.statusCode} - ${response.reasonPhrase}');
+      }
+    } on TimeoutException {
+      throw Exception('Sunucu yanıt vermiyor. (Timeout)');
+    } on SocketException {
       throw Exception(
-          'Haberler yüklenemedi. Hata kodu: ${response.statusCode}');
+          'Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin.');
+    } catch (e) {
+      rethrow;
     }
   }
 
+  // --- SAYAÇ METOTLARI ---
   Future<bool> haberTiklandi(int haberId) async {
-    try {
-      final response = await http
-          .post(Uri.parse('$_baseUrl/api/Haberler/$haberId/tiklandi'));
-      return response.statusCode == 200;
-    } catch (e) {
-      print('Tıklanma sayacı gönderilirken hata: $e');
-      return false;
-    }
+    // C# Controller'ınızdaki metoda uygun olarak PUT kullanıyoruz.
+    final response = await http.put(
+        Uri.parse('$_baseUrl/api/Haberler/$haberId/increment-click'),
+        headers: await _getHeaders());
+    return response.statusCode == 200;
   }
 
   Future<bool> haberOkundu(int haberId) async {
-    try {
-      final response =
-          await http.post(Uri.parse('$_baseUrl/api/Haberler/$haberId/okundu'));
-      return response.statusCode == 200;
-    } catch (e) {
-      print('Okunma sayacı gönderilirken hata: $e');
-      return false;
-    }
+    // C# Controller'ınızdaki metoda uygun olarak PUT kullanıyoruz.
+    final response = await http.put(
+        Uri.parse('$_baseUrl/api/Haberler/$haberId/increment-read'),
+        headers: await _getHeaders());
+    return response.statusCode == 200;
   }
+}
+
+// PagedHaberResult sınıfı
+class PagedHaberResult {
+  final List<Haber> haberler;
+  final bool sonSayfaMi;
+  PagedHaberResult({required this.haberler, required this.sonSayfaMi});
 }
