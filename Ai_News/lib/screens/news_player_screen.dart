@@ -43,20 +43,6 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     Provider.of<TtsService>(context).addListener(_onTtsCompleteForNext);
   }
 
-  void _onTtsCompleteForNext() {
-    // Sadece otomatik okuma tamamlandığında ve autoNextInProgress true ise sonraki habere geç
-    if (_isPlaying == false && _ttsService?.isPlaying == false && _autoNextInProgress && _currentIndex < widget.haberler.length - 1) {
-      setState(() {
-        _currentIndex++;
-      });
-      _playCurrent(autoNext: true);
-    } else {
-      setState(() {
-        _autoNextInProgress = false;
-      });
-    }
-  }
-
   @override
   void dispose() {
     Provider.of<TtsService>(context, listen: false).removeListener(_onTtsProgress);
@@ -79,7 +65,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
       }
       setState(() {
         _currentWordIndex = idx;
-        _isPlaying = tts.isPlaying;
+        _isPlaying = tts.isPlaying; // TTS service'den al
       });
       // Scroll to active word
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -92,6 +78,22 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
             curve: Curves.easeInOut,
           );
         }
+      });
+    }
+  }
+
+  void _onTtsCompleteForNext() {
+    // Sadece otomatik okuma tamamlandığında ve autoNextInProgress true ise sonraki habere geç
+    if (_autoNextInProgress && _currentIndex < widget.haberler.length - 1) {
+      setState(() {
+        _autoNextInProgress = false;
+        _currentIndex++;
+      });
+      _prepareCurrent();
+      _playCurrent(autoNext: true); // Yeni haberi otomatik başlat
+    } else {
+      setState(() {
+        _autoNextInProgress = false;
       });
     }
   }
@@ -113,22 +115,12 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
   }
 
   void _playCurrent({bool autoNext = false}) async {
+    final haber = widget.haberler[_currentIndex];
     setState(() {
       _isPlaying = true;
       _autoNextInProgress = autoNext;
     });
-    final haber = widget.haberler[_currentIndex];
     await _ttsService?.speakSingle(haber);
-  }
-
-  List<int> _calculateWordOffsets(String text) {
-    List<int> offsets = [];
-    int idx = 0;
-    for (final word in text.split(' ')) {
-      offsets.add(idx);
-      idx += word.length + 1; // +1 boşluk için
-    }
-    return offsets;
   }
 
   void _pause() async {
@@ -147,10 +139,11 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     if (_currentIndex < widget.haberler.length - 1) {
       setState(() {
         _currentIndex++;
+        _autoNextInProgress = false;
       });
       _prepareCurrent();
       if (_isPlaying) {
-        _playCurrent(autoNext: false);
+        _playCurrent(autoNext: false); // elle ileri/geri de autoNext: false
       }
     }
   }
@@ -159,10 +152,11 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     if (_currentIndex > 0) {
       setState(() {
         _currentIndex--;
+        _autoNextInProgress = false;
       });
       _prepareCurrent();
       if (_isPlaying) {
-        _playCurrent(autoNext: false);
+        _playCurrent(autoNext: false); // elle ileri/geri de autoNext: false
       }
     }
   }
@@ -170,7 +164,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
   void _onPlayPausePressed() async {
     if (!_isPlaying) {
       // Okuma başlamamışsa başlat
-      _playCurrent(autoNext: false);
+      _playCurrent(autoNext: false); // elle başlatmada autoNext: false
     } else {
       // Okuma devam ediyorsa durdur
       await _ttsService?.stop();
@@ -179,6 +173,16 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
         _autoNextInProgress = false;
       });
     }
+  }
+
+  List<int> _calculateWordOffsets(String text) {
+    List<int> offsets = [];
+    int idx = 0;
+    for (final word in text.split(' ')) {
+      offsets.add(idx);
+      idx += word.length + 1; // +1 boşluk için
+    }
+    return offsets;
   }
 
   @override
