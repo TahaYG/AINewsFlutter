@@ -26,6 +26,10 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
   late int _guncelTiklanmaSayisi;
   late int _guncelOkunmaSayisi;
 
+  // Eksik değişkenler
+  bool _isBookmarked = false;
+  bool _isPlaying = false;
+
   @override
   void initState() {
     super.initState();
@@ -37,6 +41,9 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
     // İyimser Arayüz: Detay ekranı açılır açılmaz tıklanma sayısını 1 artır.
     _guncelTiklanmaSayisi = widget.haber.tiklanmaSayisi + 1;
     _guncelOkunmaSayisi = widget.haber.okunmaSayisi;
+
+    // Bookmark durumunu kontrol et
+    _checkIfBookmarked();
 
     // Okunma sayacını 4 saniye sonra tetiklemek için zamanlayıcıyı başlat.
     _okunmaSayacTimer = Timer(const Duration(seconds: 4), () async {
@@ -56,6 +63,61 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
     });
   }
 
+  // Bookmark durumunu kontrol et
+  Future<void> _checkIfBookmarked() async {
+    try {
+      final bookmarkedList = await _apiService.getYerIsaretliHaberler();
+      if (mounted) {
+        setState(() {
+          _isBookmarked = bookmarkedList.any((h) => h.id == widget.haber.id);
+        });
+      }
+    } catch (e) {
+      print("Bookmark kontrol hatası: $e");
+    }
+  }
+
+  // Bookmark toggle fonksiyonu
+  Future<void> _toggleBookmark() async {
+    setState(() {
+      _isBookmarked = !_isBookmarked;
+    });
+
+    try {
+      if (_isBookmarked) {
+        await _apiService.yerIsaretiEkle(widget.haber.id);
+      } else {
+        await _apiService.yerIsaretiSil(widget.haber.id);
+      }
+    } catch (e) {
+      print("Bookmark toggle hatası: $e");
+      if (mounted) {
+        setState(() {
+          _isBookmarked = !_isBookmarked;
+        });
+      }
+    }
+  }
+
+  // TTS toggle fonksiyonu
+  void _toggleTts() {
+    if (_isPlaying) {
+      _ttsService.stop();
+      setState(() {
+        _isPlaying = false;
+      });
+    } else {
+      _ttsService.stop().then((_) {
+        if (mounted) {
+          _ttsService.speakSingle(widget.haber);
+          setState(() {
+            _isPlaying = true;
+          });
+        }
+      });
+    }
+  }
+
   @override
   void dispose() {
     _okunmaSayacTimer?.cancel();
@@ -66,99 +128,266 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
 
   @override
   Widget build(BuildContext context) {
-    // DEĞİŞİKLİK: Provider'ı dinleyen bir Consumer widget'ı kullanıyoruz.
-    // Bu, sadece butonun ve ilgili yerlerin yeniden çizilmesini sağlar.
     return Consumer<TtsService>(
       builder: (context, ttsService, child) {
+        // TTS durumunu güncelle
         final bool isThisPlaying =
             ttsService.isPlaying && ttsService.playbackId == widget.haber.id;
+        if (_isPlaying != isThisPlaying) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _isPlaying = isThisPlaying;
+              });
+            }
+          });
+        }
 
         return Scaffold(
+          extendBodyBehindAppBar: true,
           appBar: AppBar(
-            title: Text(widget.haber.baslik,
-                maxLines: 1, overflow: TextOverflow.ellipsis),
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
           ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(20.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Başlık
-                Text(
-                  widget.haber.baslik,
-                  style: GoogleFonts.lato(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // İstatistik Bölümü
-                Row(
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF667eea),
+                  Color(0xFF764ba2),
+                  Color(0xFFf093fb),
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    IconButton(
-                      icon: Icon(
-                        isThisPlaying
-                            ? Icons.pause_circle_filled_outlined
-                            : Icons.play_circle_outline,
-                        color: Theme.of(context).colorScheme.primary,
-                        size: 28,
+                    const SizedBox(height: 20),
+
+                    // Header Info
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20),
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.2)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
                       ),
-                      tooltip: isThisPlaying ? 'Durdur' : 'Sesli Oku',
-                      onPressed: () {
-                        if (isThisPlaying) {
-                          ttsService.stop();
-                        } else {
-                          ttsService.stop().then((_) {
-                            if (mounted) {
-                              ttsService.speakSingle(widget.haber);
-                            }
-                          });
-                        }
-                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Date and stats
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                      color: Colors.white.withOpacity(0.3)),
+                                ),
+                                child: Text(
+                                  DateFormat('dd MMMM yyyy, HH:mm', 'tr_TR')
+                                      .format(widget.haber.yayinTarihi),
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                              const Spacer(),
+                              _buildStatChip(Icons.visibility_outlined,
+                                  _guncelTiklanmaSayisi.toString()),
+                              const SizedBox(width: 8),
+                              _buildStatChip(Icons.headphones_outlined,
+                                  _guncelOkunmaSayisi.toString()),
+                            ],
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Title
+                          Text(
+                            widget.haber.baslik,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              height: 1.3,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    // Tarih Bilgisi
-                    const Icon(Icons.calendar_today_outlined,
-                        size: 14, color: Colors.black54),
-                    const SizedBox(width: 4),
-                    Text(
-                      DateFormat('d MMMM yyyy, HH:mm', 'tr_TR')
-                          .format(widget.haber.yayinTarihi),
-                      style:
-                          GoogleFonts.lato(fontSize: 13, color: Colors.black54),
+
+                    const SizedBox(height: 20),
+
+                    // Content
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        borderRadius: BorderRadius.circular(20),
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.2)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: Text(
+                        widget.haber.icerik ?? 'İçerik mevcut değil.',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w400,
+                          height: 1.6,
+                        ),
+                      ),
                     ),
-                    const Spacer(), // Arada boşluk bırakır
-                    // Tıklanma Sayısı
-                    _buildStatChip(
-                      context: context,
-                      icon: Icons.remove_red_eye_outlined,
-                      label: _guncelTiklanmaSayisi.toString(),
-                      color: Colors.blueGrey,
+
+                    const SizedBox(height: 20),
+
+                    // Action Buttons
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.3)),
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: _toggleBookmark,
+                                child: Container(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      AnimatedSwitcher(
+                                        duration:
+                                            const Duration(milliseconds: 300),
+                                        child: Icon(
+                                          _isBookmarked
+                                              ? Icons.bookmark
+                                              : Icons.bookmark_border,
+                                          key: ValueKey(_isBookmarked),
+                                          color: _isBookmarked
+                                              ? Colors.amber
+                                              : Colors.white,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        _isBookmarked ? 'Kaydedildi' : 'Kaydet',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: _isPlaying
+                                  ? Colors.red.withOpacity(0.8)
+                                  : Colors.green.withOpacity(0.8),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.3)),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
+                            ),
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: _toggleTts,
+                                child: Container(
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 16),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        _isPlaying
+                                            ? Icons.stop
+                                            : Icons.play_arrow,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        _isPlaying ? 'Durdur' : 'Sesli Oku',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    // Okunma Sayısı
-                    _buildStatChip(
-                      context: context,
-                      icon: Icons.menu_book_outlined,
-                      label: _guncelOkunmaSayisi.toString(),
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+
+                    const SizedBox(height: 40),
                   ],
                 ),
-
-                Divider(height: 40, color: Colors.grey[300]),
-
-                // İçerik
-                Text(
-                  widget.haber.icerik ?? 'İçerik yüklenemedi.',
-                  style: GoogleFonts.lato(
-                    fontSize: 17,
-                    height: 1.6,
-                    color: Colors.black.withOpacity(0.8),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         );
@@ -166,26 +395,29 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
     );
   }
 
-  // İstatistikleri göstermek için yardımcı bir widget metodu
-  Widget _buildStatChip({
-    required BuildContext context,
-    required IconData icon,
-    required String label,
-    required Color color,
-  }) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(width: 4),
-        Text(
-          label,
-          style: GoogleFonts.lato(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: color,
+  Widget _buildStatChip(IconData icon, String value) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white.withOpacity(0.8), size: 14),
+          const SizedBox(width: 4),
+          Text(
+            value,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

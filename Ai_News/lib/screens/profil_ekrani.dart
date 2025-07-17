@@ -16,80 +16,238 @@ class ProfilEkrani extends StatelessWidget {
         "--- ProfilEkrani build ediliyor. Görülen kullanıcı adı: ${authService.username ?? 'YOK'} ---");
 
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: const Text('Profilim'),
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.white.withOpacity(0.3)),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        title: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withOpacity(0.2)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              const SizedBox(height: 20),
-              // Profil ikonu
+              Icon(Icons.account_circle, color: Colors.white, size: 20),
+              const SizedBox(width: 8),
               Text(
-                "Kullanıcı Adı:",
-                style:
-                    GoogleFonts.lato(fontSize: 32, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              // Kullanıcı adı
-              Text(
-                authService.username ?? 'Kullanıcı Adı Yüklenemedi',
-                style: GoogleFonts.lato(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
+                'Profilim',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
                 ),
               ),
-              const SizedBox(height: 8),
-
-              // Rol etiketleri
-              if (authService.isAdmin)
-                const Chip(
-                  label: Text('Admin'),
-                  backgroundColor: Colors.red,
-                  labelStyle: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              if (!authService.isAdmin && authService.isModerator)
-                const Chip(
-                  label: Text('Moderatör'),
-                  backgroundColor: Colors.orange,
-                  labelStyle: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-
-              const Spacer(), // Boşluğu doldurur ve butonu en alta iter
-
-              // Çıkış Yap Butonu
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.logout),
-                  label: const Text('Çıkış Yap'),
-                  onPressed: () {
-                    // === DEĞİŞİKLİK BURADA ===
-                    // 1. Önce sesli okumayı durdur.
-                    Provider.of<TtsService>(context, listen: false).stop();
-                    // 2. Sonra çıkış yap.
-                    Provider.of<AuthService>(context, listen: false).logout();
-                    Navigator.of(context).popUntil((route) => route.isFirst);
-                  },
-                  style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.red[700],
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      textStyle: GoogleFonts.lato(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      )),
-                ),
-              ),
-              const SizedBox(height: 20),
             ],
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF667eea),
+              Color(0xFF764ba2),
+              Color(0xFFf093fb),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                
+                // Profile Card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      // Profile Avatar
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(40),
+                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        ),
+                        child: Icon(
+                          Icons.person,
+                          size: 40,
+                          color: Colors.white,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 24),
+                      
+                      // Username Label
+                      Text(
+                        "Kullanıcı Adı",
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.8),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 8),
+                      
+                      // Username Value
+                      Text(
+                        authService.username ?? 'Kullanıcı Adı Yüklenemedi',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 20),
+                      
+                      // Role Badges
+                      if (authService.isAdmin)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.red.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.admin_panel_settings, color: Colors.white, size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Admin',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      if (!authService.isAdmin && authService.isModerator)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.withOpacity(0.9),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.white.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.security, color: Colors.white, size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Moderatör',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                
+                const Spacer(),
+                
+                // Logout Button
+                Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.red.withOpacity(0.8),
+                        Colors.red.withOpacity(0.6),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white.withOpacity(0.3)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 10,
+                        offset: const Offset(0, 5),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () {
+                        // === DEĞİŞİKLİK BURADA ===
+                        // 1. Önce sesli okumayı durdur.
+                        Provider.of<TtsService>(context, listen: false).stop();
+                        // 2. Sonra çıkış yap.
+                        Provider.of<AuthService>(context, listen: false).logout();
+                        Navigator.of(context).popUntil((route) => route.isFirst);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.logout, color: Colors.white, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Çıkış Yap',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                const SizedBox(height: 40),
+              ],
+            ),
           ),
         ),
       ),

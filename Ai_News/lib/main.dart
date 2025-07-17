@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'services/auth_service.dart';
 import 'screens/ana_ekran.dart';
 import 'screens/giris_ekrani.dart';
+import 'screens/kayit_ekrani.dart';
 import 'services/tts_service.dart';
 
 void main() async {
@@ -71,6 +72,9 @@ class HaberUygulamasi extends StatelessWidget {
       title: 'AI Haber Motoru',
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
+      routes: {
+        '/kayit': (context) => const KayitEkrani(),
+      },
       home: Consumer<AuthService>(
         builder: (context, authService, child) {
           // Giriş durumuna göre doğru ekranı göster

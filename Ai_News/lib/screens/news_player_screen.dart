@@ -6,7 +6,9 @@ import '../services/tts_service.dart';
 class NewsPlayerScreen extends StatefulWidget {
   final List<Haber> haberler;
   final int initialIndex;
-  const NewsPlayerScreen({Key? key, required this.haberler, this.initialIndex = 0}) : super(key: key);
+  const NewsPlayerScreen(
+      {Key? key, required this.haberler, this.initialIndex = 0})
+      : super(key: key);
 
   @override
   State<NewsPlayerScreen> createState() => _NewsPlayerScreenState();
@@ -45,8 +47,10 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
 
   @override
   void dispose() {
-    Provider.of<TtsService>(context, listen: false).removeListener(_onTtsProgress);
-    Provider.of<TtsService>(context, listen: false).removeListener(_onTtsCompleteForNext);
+    Provider.of<TtsService>(context, listen: false)
+        .removeListener(_onTtsProgress);
+    Provider.of<TtsService>(context, listen: false)
+        .removeListener(_onTtsCompleteForNext);
     _ttsService?.stop();
     _lyricsScrollController.dispose();
     super.dispose();
@@ -188,105 +192,173 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Haber Player')),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                  child: Container(
-                    constraints: BoxConstraints(
-                      maxHeight: media.size.height * 0.35,
-                      minHeight: 80,
-                      minWidth: double.infinity,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: Container(
+          margin: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ),
+        title: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.2),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            'Haber Player',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF667eea),
+              Color(0xFF764ba2),
+              Color(0xFFf093fb),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              const SizedBox(height: 20),
+
+              // Haber Metni Card
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Container(
+                      padding: const EdgeInsets.all(20),
+                      child: _buildModernLyrics(),
                     ),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.grey[100],
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: _buildLyrics(),
                   ),
                 ),
               ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(
-                left: 8.0,
-                right: 8.0,
-                bottom: media.viewInsets.bottom + 12,
-                top: 8.0,
+
+              const SizedBox(height: 30),
+
+              // Progress Bar
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 40),
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                child: LinearProgressIndicator(
+                  value:
+                      _words.isNotEmpty ? _currentWordIndex / _words.length : 0,
+                  backgroundColor: Colors.transparent,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: 1,
-                    child: IconButton(
-                      icon: const Icon(Icons.skip_previous, size: 28),
+
+              const SizedBox(height: 40),
+
+              // Control Buttons
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 20),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    _buildControlButton(
+                      icon: Icons.skip_previous_rounded,
                       onPressed: _prev,
-                      tooltip: 'Önceki Haber',
+                      size: 32,
                     ),
-                  ),
-                  Expanded(
-                    flex: 3,
-                    child: SizedBox(
-                      height: 48,
-                      child: ElevatedButton.icon(
-                        icon: Icon(
-                          _isPlaying ? Icons.pause_circle : Icons.play_circle,
-                          size: 28,
-                        ),
-                        label: FittedBox(
-                          child: Text(
-                            _isPlaying ? 'Durdur' : 'Başlat',
-                            style: const TextStyle(fontSize: 18),
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                        ),
-                        onPressed: _onPlayPausePressed,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: IconButton(
-                      icon: const Icon(Icons.skip_next, size: 28),
+                    _buildPlayPauseButton(),
+                    _buildControlButton(
+                      icon: Icons.skip_next_rounded,
                       onPressed: _next,
-                      tooltip: 'Sonraki Haber',
+                      size: 32,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+
+              const SizedBox(height: 40),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildLyrics() {
+  Widget _buildModernLyrics() {
     if (_words.isEmpty) return const SizedBox();
+
     return SingleChildScrollView(
       controller: _lyricsScrollController,
       child: Wrap(
+        alignment: WrapAlignment.start,
+        runSpacing: 8,
+        spacing: 4,
         children: List.generate(_words.length, (i) {
           final isActive = i == _currentWordIndex;
-          return Container(
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 300),
             key: _wordKeys[i],
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            decoration: BoxDecoration(
+              color:
+                  isActive ? Colors.white.withOpacity(0.3) : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+              border: isActive
+                  ? Border.all(color: Colors.white.withOpacity(0.5))
+                  : null,
+            ),
             child: Text(
-              _words[i] + ' ',
+              _words[i],
               style: TextStyle(
-                fontSize: 22,
-                fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-                color: isActive ? Colors.blue : Colors.black,
-                backgroundColor: isActive ? Colors.yellow[200] : null,
+                fontSize: isActive ? 20 : 18,
+                fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                color: isActive ? Colors.white : Colors.white.withOpacity(0.8),
+                height: 1.5,
+                shadows: isActive
+                    ? [
+                        Shadow(
+                          color: Colors.black.withOpacity(0.3),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
               ),
             ),
           );
@@ -294,4 +366,75 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
       ),
     );
   }
-} 
+
+  Widget _buildControlButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    double size = 28,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: onPressed,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: size,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPlayPauseButton() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.9),
+        borderRadius: BorderRadius.circular(35),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(35),
+          onTap: _onPlayPausePressed,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Icon(
+                _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                key: ValueKey(_isPlaying),
+                color: Color(0xFF667eea),
+                size: 36,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

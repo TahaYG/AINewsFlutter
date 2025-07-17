@@ -76,77 +76,190 @@ class _HaberKartiState extends State<HaberKarti> {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      elevation: 3,
-      shadowColor: Colors.black.withOpacity(0.1),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12.0),
-        onTap: () async {
-          _apiService.haberTiklandi(widget.haber.id);
-          await Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => HaberDetayEkrani(haber: widget.haber),
-            ),
-          );
-          widget.onGeriDonuldu();
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Başlık
-              Text(
-                widget.haber.baslik,
-                style: GoogleFonts.lato(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(20),
+          onTap: () async {
+            await _apiService.haberTiklandi(widget.haber.id);
+            if (context.mounted) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => HaberDetayEkrani(haber: widget.haber),
                 ),
-              ),
-              const SizedBox(height: 12),
-
-              // İçerik
-              Text(
-                widget.haber.icerik ?? 'İçerik mevcut değil.',
-                maxLines: 3,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.lato(
-                  fontSize: 14,
-                  color: Colors.black.withOpacity(0.7),
-                  height: 1.5,
+              ).then((_) => widget.onGeriDonuldu());
+            }
+          },
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header with date and bookmark
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                      ),
+                      child: Text(
+                        DateFormat('dd MMM yyyy', 'tr_TR').format(widget.haber.yayinTarihi),
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: _toggleBookmark,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            child: AnimatedSwitcher(
+                              duration: const Duration(milliseconds: 300),
+                              child: Icon(
+                                _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                                key: ValueKey(_isBookmarked),
+                                color: _isBookmarked ? Colors.amber : Colors.white.withOpacity(0.8),
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 12),
-
-              // Tarih ve Bookmark Butonu
-              Row(
-                children: [
+                
+                const SizedBox(height: 16),
+                
+                // Title
+                Text(
+                  widget.haber.baslik,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                
+                const SizedBox(height: 12),
+                
+                // Content preview
+                if (widget.haber.icerik != null && widget.haber.icerik!.isNotEmpty)
                   Text(
-                    DateFormat('d MMMM yyyy, HH:mm', 'tr_TR')
-                        .format(widget.haber.yayinTarihi),
-                    style: GoogleFonts.lato(
-                      fontSize: 12,
-                      color: Colors.black54,
+                    widget.haber.icerik!,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.8),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
+                      height: 1.5,
                     ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const Spacer(), // Aradaki boşluğu doldurur
-                  // YENİ: Bookmark butonu
-                  IconButton(
-                    icon: Icon(
-                      _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                      color: Theme.of(context).colorScheme.primary,
+                
+                const SizedBox(height: 16),
+                
+                // Footer with stats
+                Row(
+                  children: [
+                    _buildStatChip(
+                      icon: Icons.visibility_outlined,
+                      value: widget.haber.tiklanmaSayisi.toString(),
                     ),
-                    tooltip: 'Kaydet',
-                    onPressed: _toggleBookmark,
-                  ),
-                ],
-              ),
-            ],
+                    const SizedBox(width: 12),
+                    _buildStatChip(
+                      icon: Icons.headphones_outlined,
+                      value: widget.haber.okunmaSayisi.toString(),
+                    ),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.arrow_forward_ios, color: Colors.white.withOpacity(0.8), size: 14),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Devamını Oku',
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildStatChip({required IconData icon, required String value}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.15),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: Colors.white.withOpacity(0.8), size: 14),
+          const SizedBox(width: 4),
+          Text(
+            value,
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }

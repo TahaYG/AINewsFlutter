@@ -95,7 +95,7 @@ class _AnaEkranState extends State<AnaEkran>
         if (kategoriSnapshot.connectionState == ConnectionState.waiting ||
             _tabController == null) {
           return Scaffold(
-              appBar: AppBar(title: const Text('AI Haber Motoru')),
+              appBar: AppBar(title: const Text('news.ai')),
               body: const Center(child: CircularProgressIndicator()));
         }
         if (kategoriSnapshot.hasError) {
@@ -116,189 +116,412 @@ class _AnaEkranState extends State<AnaEkran>
 
         // DEĞİŞİKLİK: DefaultTabController kaldırıldı. Artık kendi controller'ımızı kullanıyoruz.
         return Scaffold(
-          appBar: AppBar(
-            title: const Row(
-              children: [
-                Icon(Icons.smart_toy_outlined),
-                SizedBox(width: 8),
-                Text('news.ai'),
-              ],
+          extendBodyBehindAppBar: true,
+          body: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF667eea),
+                  Color(0xFF764ba2),
+                  Color(0xFFf093fb),
+                ],
+              ),
             ),
-            actions: [
-              IconButton(
-                icon: Icon(
-                  ttsService.isPlaying && ttsService.playbackId == -1
-                      ? Icons.stop_circle_outlined
-                      : Icons.playlist_play_outlined,
-                  size: 22,
-                  color: ttsService.isPlaying && ttsService.playbackId == -1
-                      ? Colors.red
-                      : Theme.of(context).colorScheme.primary,
-                ),
-                tooltip: ttsService.isPlaying && ttsService.playbackId == -1
-                    ? 'Okumayı Durdur'
-                    : 'Bu Sekmeyi Oku',
-                onPressed: () {
-                  if (ttsService.isPlaying) {
-                    ttsService.stop();
-                  } else {
-                    final activeTabIndex = _tabController?.index ?? 0;
-                    final activeKategoriId = tumKategoriler[activeTabIndex].id;
-                    final activeController =
-                        _pagingControllers[activeKategoriId];
-                    if (activeController?.itemList != null &&
-                        activeController!.itemList!.isNotEmpty) {
-                      ttsService.speakList(activeController.itemList!);
-                    }
-                  }
-                },
-              ),
-              IconButton(
-                icon: const Icon(Icons.queue_music_rounded, size: 22),
-                tooltip: 'Player',
-                onPressed: () {
-                  final activeTabIndex = _tabController?.index ?? 0;
-                  final activeKategoriId = tumKategoriler[activeTabIndex].id;
-                  final activeController = _pagingControllers[activeKategoriId];
-                  if (activeController?.itemList != null && activeController!.itemList!.isNotEmpty) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => NewsPlayerScreen(
-                          haberler: activeController.itemList!,
-                          initialIndex: 0,
+            child: SafeArea(
+              child: Column(
+                children: [
+                  // Modern AppBar
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.smart_toy_outlined,
+                                  color: Colors.white, size: 20),
+                              const SizedBox(width: 8),
+                              Text(
+                                'news.ai',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                        const Spacer(),
+                        _buildModernActionButton(
+                          icon: ttsService.isPlaying &&
+                                  ttsService.playbackId == -1
+                              ? Icons.stop_circle_outlined
+                              : Icons.playlist_play_outlined,
+                          onPressed: () {
+                            if (ttsService.isPlaying) {
+                              ttsService.stop();
+                            } else {
+                              final activeTabIndex = _tabController?.index ?? 0;
+                              final activeKategoriId =
+                                  tumKategoriler[activeTabIndex].id;
+                              final activeController =
+                                  _pagingControllers[activeKategoriId];
+                              if (activeController?.itemList != null &&
+                                  activeController!.itemList!.isNotEmpty) {
+                                ttsService
+                                    .speakList(activeController.itemList!);
+                              }
+                            }
+                          },
+                          isActive: ttsService.isPlaying &&
+                              ttsService.playbackId == -1,
+                        ),
+                        const SizedBox(width: 8),
+                        _buildModernActionButton(
+                          icon: Icons.queue_music_rounded,
+                          onPressed: () {
+                            final activeTabIndex = _tabController?.index ?? 0;
+                            final activeKategoriId =
+                                tumKategoriler[activeTabIndex].id;
+                            final activeController =
+                                _pagingControllers[activeKategoriId];
+                            if (activeController?.itemList != null &&
+                                activeController!.itemList!.isNotEmpty) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => NewsPlayerScreen(
+                                    haberler: activeController.itemList!,
+                                    initialIndex: 0,
+                                  ),
+                                ),
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content:
+                                      Text('Bu sekmede oynatılacak haber yok.'),
+                                  backgroundColor:
+                                      Colors.white.withOpacity(0.9),
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12)),
+                                ),
+                              );
+                            }
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        if (authService.isAdmin)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.red.withOpacity(0.9),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.admin_panel_settings,
+                                    size: 16, color: Colors.white),
+                                const SizedBox(width: 4),
+                                Text('Admin',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ),
+                        if (!authService.isAdmin && authService.isModerator)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withOpacity(0.9),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.security_outlined,
+                                    size: 16, color: Colors.white),
+                                const SizedBox(width: 4),
+                                Text('Mod',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600)),
+                              ],
+                            ),
+                          ),
+                        PopupMenuButton<int>(
+                          icon: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                  color: Colors.white.withOpacity(0.3)),
+                            ),
+                            child: Icon(Icons.more_vert,
+                                color: Colors.white, size: 18),
+                          ),
+                          color: Colors.white.withOpacity(0.95),
+                          surfaceTintColor: Colors.transparent,
+                          shadowColor: Colors.black.withOpacity(0.2),
+                          elevation: 8,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 3,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFF667eea).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        Icons.bookmark_border_outlined,
+                                        size: 18,
+                                        color: Color(0xFF667eea),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Kaydedilenler',
+                                      style: TextStyle(
+                                        color: Colors.black87,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            PopupMenuItem(
+                              value: 4,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 4),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Color(0xFF764ba2).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        Icons.account_circle_outlined,
+                                        size: 18,
+                                        color: Color(0xFF764ba2),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'Profil',
+                                      style: TextStyle(
+                                        color: Colors.black87,
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                          onSelected: (value) async {
+                            if (value == 3) {
+                              await Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const KaydedilenlerEkrani()),
+                              );
+                              _pagingControllers.forEach(
+                                  (_, controller) => controller.refresh());
+                            } else if (value == 4) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => const ProfilEkrani()),
+                              );
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Modern Tab Bar
+                  Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                    ),
+                    child: TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      tabAlignment: TabAlignment.start,
+                      indicator: BoxDecoration(
+                        color: Colors.white.withOpacity(0.3),
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                    );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Bu sekmede oynatılacak haber yok.')),
-                    );
-                  }
-                },
-              ),
-              if (authService.isAdmin)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: Chip(
-                    avatar: Icon(
-                      Icons.admin_panel_settings,
-                      size: 18,
-                      color: Colors.white,
-                    ),
-                    label: const Text(
-                      'Admin',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                    backgroundColor: Colors.red[700],
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ),
-              if (!authService.isAdmin && authService.isModerator)
-                Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: Chip(
-                    avatar: const Icon(Icons.security_outlined,
-                        size: 18, color: Colors.white),
-                    label: const Text('Mod',
-                        style: TextStyle(
-                            fontWeight: FontWeight.bold, color: Colors.white)),
-                    backgroundColor: Colors.orange[700],
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    visualDensity: VisualDensity.compact,
-                  ),
-                ),
-              PopupMenuButton<int>(
-                icon: const Icon(Icons.more_vert, size: 22),
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 3,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.bookmark_border_outlined, size: 18),
-                        const SizedBox(width: 6),
-                        const Text('Kaydedilenler'),
-                      ],
+                      dividerColor: Colors.transparent,
+                      labelColor: Colors.white,
+                      unselectedLabelColor: Colors.white.withOpacity(0.7),
+                      labelStyle:
+                          TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      unselectedLabelStyle:
+                          TextStyle(fontWeight: FontWeight.w400, fontSize: 14),
+                      tabs: tumKategoriler
+                          .map((kategori) => Tab(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(getIconForCategory(kategori.ad),
+                                          size: 16),
+                                      const SizedBox(width: 6),
+                                      Text(kategori.ad.toUpperCase())
+                                    ],
+                                  ),
+                                ),
+                              ))
+                          .toList(),
                     ),
                   ),
-                  PopupMenuItem(
-                    value: 4,
-                    child: Row(
-                      children: [
-                        const Icon(Icons.account_circle_outlined, size: 18),
-                        const SizedBox(width: 6),
-                        const Text('Profil'),
-                      ],
+
+                  const SizedBox(height: 16),
+
+                  // Tab Content
+                  Expanded(
+                    child: TabBarView(
+                      controller: _tabController,
+                      children: tumKategoriler.map((kategori) {
+                        final controller = _pagingControllers[kategori.id];
+                        if (controller == null) {
+                          return const Center(
+                              child: CircularProgressIndicator(
+                                  color: Colors.white));
+                        }
+
+                        return Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 16),
+                          child: RefreshIndicator(
+                            onRefresh: () =>
+                                Future.sync(() => controller.refresh()),
+                            child: PagedListView<int, Haber>(
+                              pagingController: controller,
+                              builderDelegate: PagedChildBuilderDelegate<Haber>(
+                                itemBuilder: (context, haber, index) =>
+                                    Container(
+                                  margin: const EdgeInsets.only(bottom: 12),
+                                  child: HaberKarti(
+                                    haber: haber,
+                                    onGeriDonuldu: () => controller.refresh(),
+                                  ),
+                                ),
+                                firstPageErrorIndicatorBuilder: (context) =>
+                                    Center(
+                                        child: Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Text(
+                                    'İlk sayfa yüklenemedi: ${controller.error}',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                )),
+                                noItemsFoundIndicatorBuilder: (context) =>
+                                    Center(
+                                        child: Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                  child: Text(
+                                    '${kategori.ad} kategorisinde haber bulunamadı.',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                )),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ),
                 ],
-                onSelected: (value) async {
-                  if (value == 3) {
-                    await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const KaydedilenlerEkrani()),
-                    );
-                    _pagingControllers.forEach((_, controller) => controller.refresh());
-                  } else if (value == 4) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const ProfilEkrani()),
-                    );
-                  }
-                },
               ),
-            ],
-            bottom: TabBar(
-              controller: _tabController,
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              tabs: tumKategoriler
-                  .map((kategori) => Tab(
-                        child: Row(
-                          children: [
-                            Icon(getIconForCategory(kategori.ad), size: 18),
-                            const SizedBox(width: 8),
-                            Text(kategori.ad.toUpperCase())
-                          ],
-                        ),
-                      ))
-                  .toList(),
             ),
-          ),
-          body: TabBarView(
-            controller: _tabController,
-            children: tumKategoriler.map((kategori) {
-              final controller = _pagingControllers[kategori.id];
-              if (controller == null) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              return RefreshIndicator(
-                onRefresh: () => Future.sync(() => controller.refresh()),
-                child: PagedListView<int, Haber>(
-                  pagingController: controller,
-                  builderDelegate: PagedChildBuilderDelegate<Haber>(
-                    itemBuilder: (context, haber, index) => HaberKarti(
-                      haber: haber,
-                      onGeriDonuldu: () => controller.refresh(),
-                    ),
-                    firstPageErrorIndicatorBuilder: (context) => Center(
-                        child:
-                            Text('İlk sayfa yüklenemedi: ${controller.error}')),
-                    noItemsFoundIndicatorBuilder: (context) => Center(
-                        child: Text(
-                            '${kategori.ad} kategorisinde haber bulunamadı.')),
-                  ),
-                ),
-              );
-            }).toList(),
           ),
         );
       },
+    );
+  }
+
+  Widget _buildModernActionButton({
+    required IconData icon,
+    required VoidCallback onPressed,
+    bool isActive = false,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isActive
+            ? Colors.white.withOpacity(0.3)
+            : Colors.white.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withOpacity(0.3)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(12),
+          onTap: onPressed,
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            child: Icon(
+              icon,
+              color: isActive ? Colors.white : Colors.white.withOpacity(0.9),
+              size: 18,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
