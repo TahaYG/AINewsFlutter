@@ -134,14 +134,14 @@ class _AnaEkranState extends State<AnaEkran>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.smart_toy_outlined,
-                              color: Colors.black87, size: 24),
+                              color: Colors.black87, size: 28),
                           const SizedBox(width: 8),
                           Text(
                             'news.ai',
                             style: TextStyle(
                               color: Colors.black87,
                               fontWeight: FontWeight.w600,
-                              fontSize: 20,
+                              fontSize: 22,
                             ),
                           ),
                         ],
@@ -196,8 +196,7 @@ class _AnaEkranState extends State<AnaEkran>
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content:
-                                    Text('No news to play in this tab.'),
+                                content: Text('No news to play in this tab.'),
                                 backgroundColor: Colors.grey.shade800,
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(
@@ -213,12 +212,12 @@ class _AnaEkranState extends State<AnaEkran>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.admin_panel_settings,
-                                size: 16, color: Colors.red),
+                                size: 18, color: Colors.red),
                             const SizedBox(width: 4),
                             Text('Admin',
                                 style: TextStyle(
                                     color: Colors.red,
-                                    fontSize: 12,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w600)),
                           ],
                         ),
@@ -227,12 +226,12 @@ class _AnaEkranState extends State<AnaEkran>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.security_outlined,
-                                size: 16, color: Colors.orange),
+                                size: 18, color: Colors.orange),
                             const SizedBox(width: 4),
                             Text('Mod',
                                 style: TextStyle(
                                     color: Colors.orange,
-                                    fontSize: 12,
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w600)),
                           ],
                         ),
@@ -252,7 +251,7 @@ class _AnaEkranState extends State<AnaEkran>
                             child: Icon(
                               Icons.account_circle_outlined,
                               color: Colors.black87,
-                              size: 18,
+                              size: 26,
                             ),
                           ),
                         ),
@@ -264,9 +263,11 @@ class _AnaEkranState extends State<AnaEkran>
 
               // Modern Tab Bar
               Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                margin: const EdgeInsets.only(
+                    left: 16, right: 16, top: 8, bottom: 0),
                 child: TabBar(
                   controller: _tabController,
+                  padding: EdgeInsets.zero,
                   isScrollable: true,
                   tabAlignment: TabAlignment.start,
                   indicator: BoxDecoration(
@@ -274,27 +275,27 @@ class _AnaEkranState extends State<AnaEkran>
                     shape: BoxShape.circle,
                   ),
                   indicatorSize: TabBarIndicatorSize.label,
-                  indicatorPadding: const EdgeInsets.only(top: 42),
+                  indicatorPadding: const EdgeInsets.only(top: 38),
                   indicatorWeight: 4.0,
                   dividerColor: Colors.transparent,
                   labelColor: Colors.black87,
                   unselectedLabelColor: Colors.grey.shade600,
                   labelStyle:
-                      TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                      TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
                   unselectedLabelStyle:
-                      TextStyle(fontWeight: FontWeight.w400, fontSize: 16),
-                  labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                      TextStyle(fontWeight: FontWeight.w400, fontSize: 18),
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 2),
                   tabs: tumKategoriler
                       .map((kategori) => Tab(
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 16, vertical: 10),
+                                  horizontal: 16, vertical: 4),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
                                     getIconForCategory(kategori.ad),
-                                    size: 16,
+                                    size: 18,
                                   ),
                                   const SizedBox(width: 8),
                                   Text(translateCategoryName(kategori.ad))
@@ -319,7 +320,8 @@ class _AnaEkranState extends State<AnaEkran>
                     }
 
                     return Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16),
+                      margin:
+                          const EdgeInsets.only(left: 16, right: 16, top: 0),
                       child: RefreshIndicator(
                         color: Colors.black87,
                         onRefresh: () =>
@@ -385,11 +387,11 @@ class _AnaEkranState extends State<AnaEkran>
         borderRadius: BorderRadius.circular(12),
         onTap: onPressed,
         child: Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(12),
           child: Icon(
             icon,
             color: isActive ? Colors.black : Colors.black.withOpacity(0.7),
-            size: 18,
+            size: 28,
           ),
         ),
       ),

@@ -76,7 +76,7 @@ class _HaberKartiState extends State<HaberKarti> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
+      margin: const EdgeInsets.symmetric(vertical: 4),
       height: 200,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),

@@ -253,7 +253,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
                                   ),
                                 ),
                                 const SizedBox(width: 16),
-                                Icon(Icons.headphones,
+                                Icon(Icons.menu_book_outlined,
                                     color: Colors.grey.shade600, size: 16),
                                 const SizedBox(width: 4),
                                 Text(
