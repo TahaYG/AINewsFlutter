@@ -17,14 +17,12 @@ class NewsPlayerScreen extends StatefulWidget {
 class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
   late int _currentIndex;
   bool _isPlaying = false;
-  String _currentText = '';
   int _currentWordIndex = 0;
   List<String> _words = [];
   List<int> _wordOffsets = [];
   TtsService? _ttsService;
   final ScrollController _lyricsScrollController = ScrollController();
   final Map<int, GlobalKey> _wordKeys = {};
-  bool _autoNextInProgress = false;
 
   @override
   void initState() {
@@ -94,7 +92,6 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     final haber = widget.haberler[_currentIndex];
     final text = "${haber.baslik}. ${haber.icerik ?? ''}";
     setState(() {
-      _currentText = text;
       _words = text.split(' ');
       _wordOffsets = _calculateWordOffsets(text);
       _currentWordIndex = 0;
@@ -106,7 +103,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     });
   }
 
-  Future<void> _playCurrent({bool autoNext = false}) async {
+  Future<void> _playCurrent() async {
     // Pause durumundaysa önce temizle
     if (_ttsService?.isPaused == true) {
       await _ttsService?.stop();
@@ -115,7 +112,6 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     final haber = widget.haberler[_currentIndex];
     setState(() {
       _isPlaying = true;
-      _autoNextInProgress = autoNext;
     });
     await _ttsService?.speakSingle(haber);
   }
@@ -148,7 +144,6 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
 
       setState(() {
         _currentIndex++;
-        _autoNextInProgress = false;
         _isPlaying = false; // Okuma durumunu sıfırla
       });
       _prepareCurrent();
@@ -169,7 +164,6 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
 
       setState(() {
         _currentIndex--;
-        _autoNextInProgress = false;
         _isPlaying = false; // Okuma durumunu sıfırla
       });
       _prepareCurrent();
@@ -182,7 +176,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
       await _resume();
     } else if (!_isPlaying) {
       // Okuma başlamamışsa başlat
-      await _playCurrent(autoNext: false);
+      await _playCurrent();
     } else {
       // Okuma devam ediyorsa pause et
       await _pause();
@@ -204,26 +198,20 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     if (_currentIndex < widget.haberler.length - 1) {
       setState(() {
         _currentIndex++;
-        _autoNextInProgress = false;
       });
       _prepareCurrent();
       // Otomatik olarak sonraki haberi başlat
-      _playCurrent(autoNext: true);
+      _playCurrent();
     } else {
       // Son haberse durdu
       setState(() {
         _isPlaying = false;
-        _autoNextInProgress = false;
       });
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final media = MediaQuery.of(context);
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(

@@ -37,18 +37,15 @@ class TtsService extends ChangeNotifier {
         _onCompletionCallback!();
       } else {
         // Liste bittiyse veya tekli okuma bittiyse, tamamen durdur.
-        _stopPlayback(log: "Okuma tamamlandı.");
+        _stopPlayback(clearPause: true);
       }
     });
     _flutterTts.setCancelHandler(() {
       if (!_isPaused) {
-        _stopPlayback(log: "Okuma iptal edildi.");
-      } else {
-        print("--- TTS Durumu: Pause edildi, playlist korunuyor ---");
+        _stopPlayback(clearPause: true);
       }
     });
-    _flutterTts
-        .setErrorHandler((msg) => _stopPlayback(log: "TTS Hatası: $msg"));
+    _flutterTts.setErrorHandler((msg) => _stopPlayback(clearPause: true));
     // PROGRESS HANDLER
     _flutterTts.setProgressHandler((String text, int start, int end, String word) {
       // start: okunan kelimenin metindeki başlangıç indexi
@@ -64,8 +61,7 @@ class TtsService extends ChangeNotifier {
     });
   }
 
-  void _stopPlayback({String? log, bool clearPause = true}) {
-    if (log != null) print("--- TTS Durumu: $log ---");
+  void _stopPlayback({bool clearPause = true}) {
     _isPlaying = false;
     _playbackId = null;
     _playlist.clear();
@@ -171,7 +167,7 @@ class TtsService extends ChangeNotifier {
 
   Future<void> stop() async {
     await _flutterTts.stop();
-    _stopPlayback(log: "Manuel olarak durduruldu.", clearPause: true);
+    _stopPlayback(clearPause: true);
   }
 
   // Completion callback'i ayarla

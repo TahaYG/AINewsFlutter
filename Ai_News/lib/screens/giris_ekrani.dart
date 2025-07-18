@@ -10,10 +10,8 @@ class GirisEkrani extends StatefulWidget {
 }
 
 class _GirisEkraniState extends State<GirisEkrani> {
-  final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLoading = false;
 
   Future<void> _submit() async {
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -28,10 +26,6 @@ class _GirisEkraniState extends State<GirisEkrani> {
       );
       return;
     }
-
-    setState(() {
-      _isLoading = true;
-    });
 
     final authService = Provider.of<AuthService>(context, listen: false);
     bool success = await authService.login(
@@ -49,12 +43,6 @@ class _GirisEkraniState extends State<GirisEkrani> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
-    }
-
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 

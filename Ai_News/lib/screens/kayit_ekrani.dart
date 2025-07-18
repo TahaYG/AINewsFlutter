@@ -9,11 +9,9 @@ class KayitEkrani extends StatefulWidget {
 }
 
 class _KayitEkraniState extends State<KayitEkrani> {
-  final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final ApiService _apiService = ApiService();
-  bool _isLoading = false;
 
   Future<void> _submit() async {
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -39,10 +37,6 @@ class _KayitEkraniState extends State<KayitEkrani> {
       );
       return;
     }
-
-    setState(() {
-      _isLoading = true;
-    });
 
     // === DEĞİŞİKLİK BURADA: Artık bool yerine String? bekliyoruz ===
     final String? errorMessage = await _apiService.register(
@@ -73,9 +67,6 @@ class _KayitEkraniState extends State<KayitEkrani> {
           ),
         );
       }
-      setState(() {
-        _isLoading = false;
-      });
     }
   }
 
