@@ -31,38 +31,40 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     super.initState();
     _currentIndex = widget.initialIndex;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _ttsService = Provider.of<TtsService>(context, listen: false);
-      _prepareCurrent(); // Sadece metni hazırla, otomatik okuma başlatma
+      if (mounted) {
+        _ttsService = Provider.of<TtsService>(context, listen: false);
+        _prepareCurrent(); // Sadece metni hazırla, otomatik okuma başlatma
+      }
     });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // TtsService değişikliklerini dinle
-    Provider.of<TtsService>(context).addListener(_onTtsProgress);
-    // Tamamlandığında otomatik geçiş için listener ekle
-    Provider.of<TtsService>(context).addListener(_onTtsCompleteForNext);
+    // TtsService referansını al ve listener'ları ekle
+    _ttsService = Provider.of<TtsService>(context, listen: false);
+    _ttsService!.addListener(_onTtsProgress);
+    _ttsService!.addListener(_onTtsCompleteForNext);
   }
 
   @override
   void dispose() {
-    Provider.of<TtsService>(context, listen: false)
-        .removeListener(_onTtsProgress);
-    Provider.of<TtsService>(context, listen: false)
-        .removeListener(_onTtsCompleteForNext);
-    // NewsPlayerScreen'dan çıkıldığında TTS'i durdur
-    Provider.of<TtsService>(context, listen: false).stop();
+    // TTS service referansını güvenli şekilde al
+    if (_ttsService != null) {
+      _ttsService!.removeListener(_onTtsProgress);
+      _ttsService!.removeListener(_onTtsCompleteForNext);
+      // NewsPlayerScreen'dan çıkıldığında TTS'i durdur
+      _ttsService!.stop();
+    }
     _lyricsScrollController.dispose();
     super.dispose();
   }
 
   void _onTtsProgress() {
-    final tts = Provider.of<TtsService>(context, listen: false);
-    if (_wordOffsets.isNotEmpty) {
+    if (_ttsService != null && _wordOffsets.isNotEmpty) {
       int idx = 0;
       for (int i = 0; i < _wordOffsets.length; i++) {
-        if (tts.currentWordLocation >= _wordOffsets[i]) {
+        if (_ttsService!.currentWordLocation >= _wordOffsets[i]) {
           idx = i;
         } else {
           break;
@@ -70,7 +72,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
       }
       setState(() {
         _currentWordIndex = idx;
-        _isPlaying = tts.isPlaying; // TTS service'den al
+        _isPlaying = _ttsService!.isPlaying; // TTS service'den al
       });
       // Scroll to active word
       WidgetsBinding.instance.addPostFrameCallback((_) {
