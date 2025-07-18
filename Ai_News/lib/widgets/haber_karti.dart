@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/haber.dart';
 import '../screens/haber_detay_ekrani.dart';
@@ -114,14 +113,17 @@ class _HaberKartiState extends State<HaberKarti> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.3)),
                       ),
                       child: Text(
-                        DateFormat('dd MMM yyyy', 'tr_TR').format(widget.haber.yayinTarihi),
+                        DateFormat('dd MMM yyyy', 'tr_TR')
+                            .format(widget.haber.yayinTarihi),
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.9),
                           fontSize: 12,
@@ -134,7 +136,8 @@ class _HaberKartiState extends State<HaberKarti> {
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.3)),
                       ),
                       child: Material(
                         color: Colors.transparent,
@@ -146,9 +149,13 @@ class _HaberKartiState extends State<HaberKarti> {
                             child: AnimatedSwitcher(
                               duration: const Duration(milliseconds: 300),
                               child: Icon(
-                                _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                                _isBookmarked
+                                    ? Icons.bookmark
+                                    : Icons.bookmark_border,
                                 key: ValueKey(_isBookmarked),
-                                color: _isBookmarked ? Colors.amber : Colors.white.withOpacity(0.8),
+                                color: _isBookmarked
+                                    ? Colors.amber
+                                    : Colors.white.withOpacity(0.8),
                                 size: 20,
                               ),
                             ),
@@ -158,9 +165,9 @@ class _HaberKartiState extends State<HaberKarti> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Title
                 Text(
                   widget.haber.baslik,
@@ -173,11 +180,12 @@ class _HaberKartiState extends State<HaberKarti> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 // Content preview
-                if (widget.haber.icerik != null && widget.haber.icerik!.isNotEmpty)
+                if (widget.haber.icerik != null &&
+                    widget.haber.icerik!.isNotEmpty)
                   Text(
                     widget.haber.icerik!,
                     style: TextStyle(
@@ -189,9 +197,9 @@ class _HaberKartiState extends State<HaberKarti> {
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                   ),
-                
+
                 const SizedBox(height: 16),
-                
+
                 // Footer with stats
                 Row(
                   children: [
@@ -206,16 +214,19 @@ class _HaberKartiState extends State<HaberKarti> {
                     ),
                     const Spacer(),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white.withOpacity(0.3)),
+                        border:
+                            Border.all(color: Colors.white.withOpacity(0.3)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.arrow_forward_ios, color: Colors.white.withOpacity(0.8), size: 14),
+                          Icon(Icons.arrow_forward_ios,
+                              color: Colors.white.withOpacity(0.8), size: 14),
                           const SizedBox(width: 4),
                           Text(
                             'Devamını Oku',

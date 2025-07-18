@@ -17,6 +17,9 @@ class TtsService extends ChangeNotifier {
   int _pausedWordLocation = 0; // Pause edildiğinde kelime pozisyonunu sakla
   int _resumeOffset = 0; // Resume edildiğinde offset
   int get currentWordLocation => _currentWordLocation;
+  
+  // Completion callback
+  Function()? _onCompletionCallback;
 
   bool get isPlaying => _isPlaying;
   bool get isPaused => _isPaused;
@@ -29,6 +32,9 @@ class TtsService extends ChangeNotifier {
         // Eğer liste çalıyorsa ve son parça değilse, bir sonrakine geç.
         _currentIndex++;
         _playCurrentItemInPlaylist();
+      } else if (_onCompletionCallback != null) {
+        // Completion callback varsa çağır (news_player_screen için)
+        _onCompletionCallback!();
       } else {
         // Liste bittiyse veya tekli okuma bittiyse, tamamen durdur.
         _stopPlayback(log: "Okuma tamamlandı.");
@@ -166,6 +172,16 @@ class TtsService extends ChangeNotifier {
   Future<void> stop() async {
     await _flutterTts.stop();
     _stopPlayback(log: "Manuel olarak durduruldu.", clearPause: true);
+  }
+
+  // Completion callback'i ayarla
+  void setCompletionCallback(Function()? callback) {
+    _onCompletionCallback = callback;
+  }
+
+  // Completion callback'i temizle
+  void clearCompletionCallback() {
+    _onCompletionCallback = null;
   }
 
   @override

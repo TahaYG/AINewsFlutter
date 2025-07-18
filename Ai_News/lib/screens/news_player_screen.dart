@@ -33,6 +33,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         _ttsService = Provider.of<TtsService>(context, listen: false);
+        _ttsService?.setCompletionCallback(_onTtsCompleted);
         _prepareCurrent(); // Sadece metni hazırla, otomatik okuma başlatma
       }
     });
@@ -44,7 +45,6 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     // TtsService referansını al ve listener'ları ekle
     _ttsService = Provider.of<TtsService>(context, listen: false);
     _ttsService!.addListener(_onTtsProgress);
-    _ttsService!.addListener(_onTtsCompleteForNext);
   }
 
   @override
@@ -52,7 +52,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     // TTS service referansını güvenli şekilde al
     if (_ttsService != null) {
       _ttsService!.removeListener(_onTtsProgress);
-      _ttsService!.removeListener(_onTtsCompleteForNext);
+      _ttsService!.clearCompletionCallback(); // Callback'i temizle
       // NewsPlayerScreen'dan çıkıldığında TTS'i durdur
       _ttsService!.stop();
     }
@@ -86,22 +86,6 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
             curve: Curves.easeInOut,
           );
         }
-      });
-    }
-  }
-
-  Future<void> _onTtsCompleteForNext() async {
-    // Sadece otomatik okuma tamamlandığında ve autoNextInProgress true ise sonraki habere geç
-    if (_autoNextInProgress && _currentIndex < widget.haberler.length - 1) {
-      setState(() {
-        _autoNextInProgress = false;
-        _currentIndex++;
-      });
-      _prepareCurrent();
-      await _playCurrent(autoNext: true); // Yeni haberi otomatik başlat
-    } else {
-      setState(() {
-        _autoNextInProgress = false;
       });
     }
   }
@@ -215,6 +199,25 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     return offsets;
   }
 
+  void _onTtsCompleted() {
+    // Haber tamamlandığında otomatik olarak sonraki habere geç
+    if (_currentIndex < widget.haberler.length - 1) {
+      setState(() {
+        _currentIndex++;
+        _autoNextInProgress = false;
+      });
+      _prepareCurrent();
+      // Otomatik olarak sonraki haberi başlat
+      _playCurrent(autoNext: true);
+    } else {
+      // Son haberse durdu
+      setState(() {
+        _isPlaying = false;
+        _autoNextInProgress = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final media = MediaQuery.of(context);
@@ -244,7 +247,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
-            'Haber Player',
+            'news.ai Player',
             style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w600,
