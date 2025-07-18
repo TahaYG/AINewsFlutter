@@ -14,6 +14,8 @@ class TtsService extends ChangeNotifier {
   int _currentIndex = 0;
   int _currentWordLocation = 0;
   int _lastWordLocation = 0;
+  int _pausedWordLocation = 0; // Pause edildiğinde kelime pozisyonunu sakla
+  int _resumeOffset = 0; // Resume edildiğinde offset
   int get currentWordLocation => _currentWordLocation;
 
   bool get isPlaying => _isPlaying;
@@ -32,8 +34,13 @@ class TtsService extends ChangeNotifier {
         _stopPlayback(log: "Okuma tamamlandı.");
       }
     });
-    _flutterTts
-        .setCancelHandler(() => _stopPlayback(log: "Okuma iptal edildi."));
+    _flutterTts.setCancelHandler(() {
+      if (!_isPaused) {
+        _stopPlayback(log: "Okuma iptal edildi.");
+      } else {
+        print("--- TTS Durumu: Pause edildi, playlist korunuyor ---");
+      }
+    });
     _flutterTts
         .setErrorHandler((msg) => _stopPlayback(log: "TTS Hatası: $msg"));
     // PROGRESS HANDLER
@@ -41,19 +48,28 @@ class TtsService extends ChangeNotifier {
       // start: okunan kelimenin metindeki başlangıç indexi
       // end: okunan kelimenin metindeki bitiş indexi
       // word: okunan kelime
-      _currentWordLocation = start;
-      _lastWordLocation = start;
+      
+      // Resume durumunda offset ekle
+      int actualPosition = _resumeOffset + start;
+      
+      _currentWordLocation = actualPosition;
+      _lastWordLocation = actualPosition;
       notifyListeners();
     });
   }
 
-  void _stopPlayback({String? log}) {
+  void _stopPlayback({String? log, bool clearPause = true}) {
     if (log != null) print("--- TTS Durumu: $log ---");
     _isPlaying = false;
     _playbackId = null;
     _playlist.clear();
     _currentIndex = 0;
     _currentWordLocation = 0;
+    _resumeOffset = 0;
+    if (clearPause) {
+      _pausedWordLocation = 0;
+      _isPaused = false;
+    }
     notifyListeners();
   }
 
@@ -83,6 +99,7 @@ class TtsService extends ChangeNotifier {
     _currentIndex = 0;
     _playbackId = haber.id;
     _isPlaying = true;
+    _resumeOffset = 0; // Yeni başlangıçta offset sıfırla
     notifyListeners();
 
     _playCurrentItemInPlaylist();
@@ -98,6 +115,7 @@ class TtsService extends ChangeNotifier {
       _currentIndex = 0;
       _playbackId = -1; // Liste çaldığını belirtir
       _isPlaying = true;
+      _resumeOffset = 0; // Yeni başlangıçta offset sıfırla
       notifyListeners();
 
       _playCurrentItemInPlaylist(); // Sadece ilk haberi başlat, gerisi otomatik gelecek.
@@ -105,38 +123,49 @@ class TtsService extends ChangeNotifier {
   }
 
   Future<void> pause() async {
+    // Pause edildiğinde mevcut pozisyonu sakla
+    _pausedWordLocation = _lastWordLocation;
+    
     if (Platform.isIOS || Platform.isMacOS) {
       await _flutterTts.pause();
-      _isPaused = true;
-      _isPlaying = false;
-      notifyListeners();
     } else {
-      // Android'de pause desteklenmiyor, stop ile durdur
+      // Android'de pause desteklenmiyor, stop ile durdur ama playlist'i temizleme
       await _flutterTts.stop();
-      _isPaused = true;
-      _isPlaying = false;
-      notifyListeners();
     }
+    
+    _isPaused = true;
+    _isPlaying = false;
+    notifyListeners();
   }
 
   Future<void> resume() async {
-    // Her platformda kaldığı yerden devam et: _lastWordLocation'dan itibaren metni tekrar okut
+    // Her platformda kaldığı yerden devam et: _pausedWordLocation'dan itibaren metni tekrar okut
     if (_playlist.isNotEmpty && _currentIndex < _playlist.length) {
       final haber = _playlist[_currentIndex];
       String okunacakMetin = "${haber.baslik}. ${haber.icerik ?? ''}";
-      String devamMetni = okunacakMetin.substring(_lastWordLocation);
+      
+      // Güvenli substring işlemi - pause edildiğinde kaydedilen pozisyonu kullan
+      String devamMetni = okunacakMetin;
+      if (_pausedWordLocation > 0 && _pausedWordLocation < okunacakMetin.length) {
+        devamMetni = okunacakMetin.substring(_pausedWordLocation);
+        _resumeOffset = _pausedWordLocation; // Resume offset'ini ayarla
+      } else {
+        _resumeOffset = 0;
+      }
+      
       await _configureTts();
       _isPaused = false;
       _isPlaying = true;
+      _currentWordLocation = _pausedWordLocation; // Progress tracking için
       notifyListeners();
+      
       await _flutterTts.speak(devamMetni);
     }
   }
 
   Future<void> stop() async {
     await _flutterTts.stop();
-    _stopPlayback(log: "Manuel olarak durduruldu.");
-    _isPaused = false;
+    _stopPlayback(log: "Manuel olarak durduruldu.", clearPause: true);
   }
 
   @override

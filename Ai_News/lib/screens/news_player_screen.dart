@@ -72,7 +72,8 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
       }
       setState(() {
         _currentWordIndex = idx;
-        _isPlaying = _ttsService!.isPlaying; // TTS service'den al
+        _isPlaying = _ttsService!.isPlaying &&
+            !_ttsService!.isPaused; // TTS service'den al
       });
       // Scroll to active word
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -89,7 +90,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     }
   }
 
-  void _onTtsCompleteForNext() {
+  Future<void> _onTtsCompleteForNext() async {
     // Sadece otomatik okuma tamamlandığında ve autoNextInProgress true ise sonraki habere geç
     if (_autoNextInProgress && _currentIndex < widget.haberler.length - 1) {
       setState(() {
@@ -97,7 +98,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
         _currentIndex++;
       });
       _prepareCurrent();
-      _playCurrent(autoNext: true); // Yeni haberi otomatik başlat
+      await _playCurrent(autoNext: true); // Yeni haberi otomatik başlat
     } else {
       setState(() {
         _autoNextInProgress = false;
@@ -121,7 +122,12 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     });
   }
 
-  void _playCurrent({bool autoNext = false}) async {
+  Future<void> _playCurrent({bool autoNext = false}) async {
+    // Pause durumundaysa önce temizle
+    if (_ttsService?.isPaused == true) {
+      await _ttsService?.stop();
+    }
+
     final haber = widget.haberler[_currentIndex];
     setState(() {
       _isPlaying = true;
@@ -130,55 +136,72 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     await _ttsService?.speakSingle(haber);
   }
 
-  void _pause() async {
-    await _ttsService?.stop();
+  Future<void> _pause() async {
+    await _ttsService?.pause();
     setState(() {
       _isPlaying = false;
     });
   }
 
-  void _resume() {
-    // Sadece mevcut haberi baştan oku, _next() tetiklenmesin
-    _playCurrent();
+  Future<void> _resume() async {
+    await _ttsService?.resume();
+    setState(() {
+      _isPlaying = true;
+    });
   }
 
-  void _next() {
+  Future<void> _next() async {
     if (_currentIndex < widget.haberler.length - 1) {
+      // Pause durumundaysa önce temizle
+      if (_ttsService?.isPaused == true) {
+        await _ttsService?.stop();
+      }
+
+      // Haber okunuyorsa durdur
+      if (_isPlaying) {
+        await _ttsService?.stop();
+      }
+
       setState(() {
         _currentIndex++;
         _autoNextInProgress = false;
+        _isPlaying = false; // Okuma durumunu sıfırla
       });
       _prepareCurrent();
-      if (_isPlaying) {
-        _playCurrent(autoNext: false); // elle ileri/geri de autoNext: false
-      }
     }
   }
 
-  void _prev() {
+  Future<void> _prev() async {
     if (_currentIndex > 0) {
+      // Pause durumundaysa önce temizle
+      if (_ttsService?.isPaused == true) {
+        await _ttsService?.stop();
+      }
+
+      // Haber okunuyorsa durdur
+      if (_isPlaying) {
+        await _ttsService?.stop();
+      }
+
       setState(() {
         _currentIndex--;
         _autoNextInProgress = false;
+        _isPlaying = false; // Okuma durumunu sıfırla
       });
       _prepareCurrent();
-      if (_isPlaying) {
-        _playCurrent(autoNext: false); // elle ileri/geri de autoNext: false
-      }
     }
   }
 
-  void _onPlayPausePressed() async {
-    if (!_isPlaying) {
+  Future<void> _onPlayPausePressed() async {
+    if (_ttsService?.isPaused == true) {
+      // Pause durumundaysa resume et
+      await _resume();
+    } else if (!_isPlaying) {
       // Okuma başlamamışsa başlat
-      _playCurrent(autoNext: false); // elle başlatmada autoNext: false
+      await _playCurrent(autoNext: false);
     } else {
-      // Okuma devam ediyorsa durdur
-      await _ttsService?.stop();
-      setState(() {
-        _isPlaying = false;
-        _autoNextInProgress = false;
-      });
+      // Okuma devam ediyorsa pause et
+      await _pause();
     }
   }
 
@@ -429,8 +452,11 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
             child: AnimatedSwitcher(
               duration: const Duration(milliseconds: 300),
               child: Icon(
-                _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                key: ValueKey(_isPlaying),
+                (_isPlaying && !(_ttsService?.isPaused ?? false))
+                    ? Icons.pause_rounded
+                    : Icons.play_arrow_rounded,
+                key:
+                    ValueKey('${_isPlaying}_${_ttsService?.isPaused ?? false}'),
                 color: Color(0xFF667eea),
                 size: 36,
               ),
