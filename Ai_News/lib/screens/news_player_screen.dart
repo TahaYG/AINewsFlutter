@@ -213,131 +213,84 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        shadowColor: Colors.grey.withOpacity(0.3),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
         ),
-        title: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            'news.ai Player',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-            ),
+        title: Text(
+          'news.ai player',
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
           ),
         ),
         centerTitle: true,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF667eea),
-              Color(0xFF764ba2),
-              Color(0xFFf093fb),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              const SizedBox(height: 20),
-
-              // Haber Metni Card
-              Expanded(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 20),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.white.withOpacity(0.2)),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
+      body: Column(
+        children: [
+          // Haber Metni Card
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.grey.shade300),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
                   ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(24),
-                    child: Container(
-                      padding: const EdgeInsets.all(20),
-                      child: _buildModernLyrics(),
-                    ),
-                  ),
-                ),
+                ],
               ),
-
-              const SizedBox(height: 30),
-
-              // Progress Bar
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 40),
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.3),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-                child: LinearProgressIndicator(
-                  value:
-                      _words.isNotEmpty ? _currentWordIndex / _words.length : 0,
-                  backgroundColor: Colors.transparent,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              ),
-
-              const SizedBox(height: 40),
-
-              // Control Buttons
-              Container(
-                margin: const EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    _buildControlButton(
-                      icon: Icons.skip_previous_rounded,
-                      onPressed: _prev,
-                      size: 32,
-                    ),
-                    _buildPlayPauseButton(),
-                    _buildControlButton(
-                      icon: Icons.skip_next_rounded,
-                      onPressed: _next,
-                      size: 32,
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 40),
-            ],
+              child: _buildClassicLyrics(),
+            ),
           ),
-        ),
+
+          // Progress Bar
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+            child: LinearProgressIndicator(
+              value: _words.isNotEmpty ? _currentWordIndex / _words.length : 0,
+              backgroundColor: Colors.grey.shade300,
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.black87),
+            ),
+          ),
+
+          // Control Buttons
+          Container(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _buildClassicControlButton(
+                  icon: Icons.skip_previous_rounded,
+                  onPressed: _prev,
+                  size: 28,
+                ),
+                _buildClassicPlayPauseButton(),
+                _buildClassicControlButton(
+                  icon: Icons.skip_next_rounded,
+                  onPressed: _next,
+                  size: 28,
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildModernLyrics() {
+  Widget _buildClassicLyrics() {
     if (_words.isEmpty) return const SizedBox();
 
     return SingleChildScrollView(
@@ -351,31 +304,19 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
           return AnimatedContainer(
             duration: const Duration(milliseconds: 300),
             key: _wordKeys[i],
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
             decoration: BoxDecoration(
-              color:
-                  isActive ? Colors.white.withOpacity(0.3) : Colors.transparent,
+              color: isActive ? Colors.grey.shade100 : Colors.transparent,
               borderRadius: BorderRadius.circular(8),
-              border: isActive
-                  ? Border.all(color: Colors.white.withOpacity(0.5))
-                  : null,
+              border: isActive ? Border.all(color: Colors.grey.shade400) : null,
             ),
             child: Text(
               _words[i],
               style: TextStyle(
-                fontSize: isActive ? 20 : 18,
+                fontSize: isActive ? 18 : 16,
                 fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                color: isActive ? Colors.white : Colors.white.withOpacity(0.8),
+                color: isActive ? Colors.black87 : Colors.grey.shade700,
                 height: 1.5,
-                shadows: isActive
-                    ? [
-                        Shadow(
-                          color: Colors.black.withOpacity(0.3),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
               ),
             ),
           );
@@ -384,52 +325,38 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     );
   }
 
-  Widget _buildControlButton({
+  Widget _buildClassicControlButton({
     required IconData icon,
     required VoidCallback onPressed,
     double size = 28,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(20),
-          onTap: onPressed,
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            child: Icon(
-              icon,
-              color: Colors.white,
-              size: size,
-            ),
+        onTap: onPressed,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          child: Icon(
+            icon,
+            color: Colors.black87,
+            size: size,
           ),
         ),
       ),
     );
   }
 
-  Widget _buildPlayPauseButton() {
+  Widget _buildClassicPlayPauseButton() {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.black87,
         borderRadius: BorderRadius.circular(35),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.2),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -448,7 +375,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
                     : Icons.play_arrow_rounded,
                 key:
                     ValueKey('${_isPlaying}_${_ttsService?.isPaused ?? false}'),
-                color: Color(0xFF667eea),
+                color: Colors.white,
                 size: 36,
               ),
             ),

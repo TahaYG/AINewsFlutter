@@ -10,7 +10,7 @@ import 'services/tts_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await initializeDateFormatting('tr_TR', null);
+  await initializeDateFormatting('en_US', null);
 
   runApp(
     MultiProvider(
@@ -69,7 +69,7 @@ class HaberUygulamasi extends StatelessWidget {
     );
 
     return MaterialApp(
-      title: 'AI Haber Motoru',
+      title: 'AI News Engine',
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
       routes: {

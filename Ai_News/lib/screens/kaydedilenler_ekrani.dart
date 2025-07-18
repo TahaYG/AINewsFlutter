@@ -12,208 +12,161 @@ class KaydedilenlerEkrani extends StatefulWidget {
 
 class _KaydedilenlerEkraniState extends State<KaydedilenlerEkrani> {
   final ApiService _apiService = ApiService();
-  late Future<List<Haber>> _kaydedilenlerFuture;
+  late Future<List<Haber>> _kaydedilenHaberlerFuture;
 
   @override
   void initState() {
     super.initState();
-    _yenile();
+    _kaydedilenHaberlerFuture = _apiService.getYerIsaretliHaberler();
   }
 
   void _yenile() {
     setState(() {
-      _kaydedilenlerFuture = _apiService.getYerIsaretliHaberler();
+      _kaydedilenHaberlerFuture = _apiService.getYerIsaretliHaberler();
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: Container(
-          margin: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.3)),
-          ),
-          child: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
-          ),
+        backgroundColor: Colors.white,
+        elevation: 1,
+        shadowColor: Colors.grey.withOpacity(0.3),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
+          onPressed: () => Navigator.pop(context),
         ),
-        title: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.15),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.2)),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.bookmark, color: Colors.white, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'Kaydedilen Haberler',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16,
-                ),
-              ),
-            ],
+        title: Text(
+          'Bookmarks',
+          style: TextStyle(
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+            fontSize: 18,
           ),
         ),
         centerTitle: true,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF667eea),
-              Color(0xFF764ba2),
-              Color(0xFFf093fb),
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: FutureBuilder<List<Haber>>(
-            future: _kaydedilenlerFuture,
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 3,
-                  ),
-                );
-              }
-              if (snapshot.hasError) {
-                return Center(
-                  child: Container(
-                    margin: const EdgeInsets.all(20),
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.2)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 15,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.error_outline,
-                          color: Colors.white,
-                          size: 48,
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          'Haberler Yüklenemedi',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          '${snapshot.error}',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 14,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(
-                  child: Container(
-                    margin: const EdgeInsets.all(20),
-                    padding: const EdgeInsets.all(32),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.white.withOpacity(0.2)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 15,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.bookmark_border,
-                          color: Colors.white.withOpacity(0.7),
-                          size: 64,
-                        ),
-                        const SizedBox(height: 20),
-                        Text(
-                          'Henüz Kayıtlı Haber Yok',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Beğendiğiniz haberleri kaydetmek için haber kartlarındaki yer işareti butonunu kullanın.',
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                            fontSize: 14,
-                            height: 1.5,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-
-              final haberler = snapshot.data!;
-              return RefreshIndicator(
-                onRefresh: () async => _yenile(),
-                backgroundColor: Colors.white.withOpacity(0.9),
-                color: Color(0xFF667eea),
-                child: ListView.builder(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: haberler.length,
-                  itemBuilder: (context, index) {
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: HaberKarti(
-                        haber: haberler[index],
-                        onGeriDonuldu: _yenile,
-                      ),
-                    );
-                  },
+      body: FutureBuilder<List<Haber>>(
+        future: _kaydedilenHaberlerFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(
+              child: CircularProgressIndicator(
+                color: Colors.black87,
+              ),
+            );
+          }
+          if (snapshot.hasError) {
+            return Center(
+              child: Container(
+                margin: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey.shade300),
                 ),
-              );
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.error_outline,
+                      color: Colors.red,
+                      size: 48,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Error',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Bookmarked news could not be loaded: ${snapshot.error}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return Center(
+              child: Container(
+                margin: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.grey.shade300),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.bookmark_border,
+                      color: Colors.grey.shade400,
+                      size: 64,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No Bookmarks Yet',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'To bookmark a news article, click the bookmark button on the news detail page.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          final haberler = snapshot.data!;
+          return RefreshIndicator(
+            color: Colors.black87,
+            onRefresh: () async {
+              setState(() {
+                _kaydedilenHaberlerFuture = _apiService.getYerIsaretliHaberler();
+              });
             },
-          ),
-        ),
+            child: ListView.builder(
+              padding: const EdgeInsets.all(16),
+              itemCount: haberler.length,
+              itemBuilder: (context, index) {
+                final haber = haberler[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: HaberKarti(
+                    haber: haber,
+                    onGeriDonuldu: () {
+                      setState(() {
+                        _kaydedilenHaberlerFuture = _apiService.getYerIsaretliHaberler();
+                      });
+                    },
+                  ),
+                );
+              },
+            ),
+          );
+        },
       ),
     );
   }

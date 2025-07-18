@@ -99,7 +99,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
   }
 
   // TTS toggle fonksiyonu
-  void _toggleTts() {
+  void _togglePlayPause() {
     if (_isPlaying) {
       _ttsService.stop();
       setState(() {
@@ -143,251 +143,193 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
         }
 
         return Scaffold(
-          extendBodyBehindAppBar: true,
-          appBar: AppBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            leading: Container(
-              margin: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-          ),
-          body: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF667eea),
-                  Color(0xFF764ba2),
-                  Color(0xFFf093fb),
+          backgroundColor: Colors.white,
+          body: CustomScrollView(
+            slivers: [
+              SliverAppBar(
+                backgroundColor: Colors.white,
+                elevation: 1,
+                shadowColor: Colors.grey.withOpacity(0.3),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new,
+                      color: Colors.black87),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                title: Text(
+                  'News Detail',
+                  style: TextStyle(
+                    color: Colors.black87,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 18,
+                  ),
+                ),
+                centerTitle: true,
+                actions: [
+                  IconButton(
+                    icon: Icon(
+                      _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                    ),
+                    onPressed: _toggleBookmark,
+                  ),
                 ],
+                floating: true,
+                snap: true,
               ),
-            ),
-            child: SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 20),
-
-                    // Header Info
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(20),
-                        border:
-                            Border.all(color: Colors.white.withOpacity(0.2)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 15,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Date and stats
-                          Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                      color: Colors.white.withOpacity(0.3)),
-                                ),
-                                child: Text(
-                                  DateFormat('dd MMMM yyyy, HH:mm', 'tr_TR')
-                                      .format(widget.haber.yayinTarihi),
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.9),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                              const Spacer(),
-                              _buildStatChip(Icons.visibility_outlined,
-                                  _guncelTiklanmaSayisi.toString()),
-                              const SizedBox(width: 8),
-                              _buildStatChip(Icons.headphones_outlined,
-                                  _guncelOkunmaSayisi.toString()),
-                            ],
-                          ),
-
-                          const SizedBox(height: 20),
-
-                          // Title
-                          Text(
-                            widget.haber.baslik,
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                              height: 1.3,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Content
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(20),
-                        border:
-                            Border.all(color: Colors.white.withOpacity(0.2)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 15,
-                            offset: const Offset(0, 5),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        widget.haber.icerik ?? 'İçerik mevcut değil.',
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Haber Başlığı
+                      Text(
+                        widget.haber.baslik,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.9),
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                          height: 1.6,
+                          fontSize: 24,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black87,
+                          height: 1.3,
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 16),
 
-                    const SizedBox(height: 20),
-
-                    // Action Buttons
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                  color: Colors.white.withOpacity(0.3)),
-                            ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(16),
-                                onTap: _toggleBookmark,
-                                child: Container(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      AnimatedSwitcher(
-                                        duration:
-                                            const Duration(milliseconds: 300),
-                                        child: Icon(
-                                          _isBookmarked
-                                              ? Icons.bookmark
-                                              : Icons.bookmark_border,
-                                          key: ValueKey(_isBookmarked),
-                                          color: _isBookmarked
-                                              ? Colors.amber
-                                              : Colors.white,
-                                          size: 20,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        _isBookmarked ? 'Kaydedildi' : 'Kaydet',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ],
+                      // Haber Bilgileri
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Row(
+                                children: [
+                                  Icon(Icons.access_time,
+                                      color: Colors.grey.shade600, size: 16),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    DateFormat('dd.MM.yyyy HH:mm', 'en_US')
+                                        .format(widget.haber.yayinTarihi),
+                                    style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 14,
+                                    ),
                                   ),
-                                ),
+                                ],
                               ),
                             ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: _isPlaying
-                                  ? Colors.red.withOpacity(0.8)
-                                  : Colors.green.withOpacity(0.8),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                  color: Colors.white.withOpacity(0.3)),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 5),
+                            Row(
+                              children: [
+                                Icon(Icons.visibility,
+                                    color: Colors.grey.shade600, size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _guncelTiklanmaSayisi.toString(),
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+                                Icon(Icons.headphones,
+                                    color: Colors.grey.shade600, size: 16),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _guncelOkunmaSayisi.toString(),
+                                  style: TextStyle(
+                                    color: Colors.grey.shade600,
+                                    fontSize: 14,
+                                  ),
                                 ),
                               ],
                             ),
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(16),
-                                onTap: _toggleTts,
-                                child: Container(
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        _isPlaying
-                                            ? Icons.stop
-                                            : Icons.play_arrow,
-                                        color: Colors.white,
-                                        size: 20,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        _isPlaying ? 'Durdur' : 'Sesli Oku',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ],
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Haber İçeriği
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.shade300),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          widget.haber.icerik ?? 'Content not found.',
+                          style: TextStyle(
+                            fontSize: 16,
+                            height: 1.6,
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Oynatma Butonu
+                      Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: _isPlaying
+                              ? Colors.grey.shade800
+                              : Colors.black87,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(12),
+                            onTap: _togglePlayPause,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    _isPlaying ? Icons.stop : Icons.play_arrow,
+                                    color: Colors.white,
+                                    size: 24,
                                   ),
-                                ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    _isPlaying
+                                        ? 'Stop Playing'
+                                        : 'Listen to News',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
                         ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 40),
-                  ],
+                      ),
+                      const SizedBox(height: 40),
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
           ),
         );
       },
