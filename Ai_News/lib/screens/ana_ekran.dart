@@ -134,14 +134,14 @@ class _AnaEkranState extends State<AnaEkran>
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.smart_toy_outlined,
-                              color: Colors.black87, size: 20),
+                              color: Colors.black87, size: 24),
                           const SizedBox(width: 8),
                           Text(
                             'news.ai',
                             style: TextStyle(
                               color: Colors.black87,
                               fontWeight: FontWeight.w600,
-                              fontSize: 16,
+                              fontSize: 20,
                             ),
                           ),
                         ],

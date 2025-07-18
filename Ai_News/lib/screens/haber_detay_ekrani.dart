@@ -144,39 +144,59 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
 
         return Scaffold(
           backgroundColor: Colors.white,
-          body: CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                backgroundColor: Colors.white,
-                elevation: 1,
-                shadowColor: Colors.grey.withOpacity(0.3),
-                leading: IconButton(
-                  icon: const Icon(Icons.arrow_back_ios_new,
-                      color: Colors.black87),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                title: Text(
-                  'News Detail',
-                  style: TextStyle(
-                    color: Colors.black87,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18,
-                  ),
-                ),
-                centerTitle: true,
-                actions: [
-                  IconButton(
-                    icon: Icon(
-                      _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+          body: Column(
+            children: [
+              // AppBar
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.grey.withOpacity(0.3),
+                      blurRadius: 1,
+                      offset: const Offset(0, 1),
                     ),
-                    onPressed: _toggleBookmark,
+                  ],
+                ),
+                child: SafeArea(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: const Icon(Icons.arrow_back_ios_new,
+                              color: Colors.black87),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                        Expanded(
+                          child: Text(
+                            'News Detail',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 18,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            _isBookmarked
+                                ? Icons.bookmark
+                                : Icons.bookmark_border,
+                          ),
+                          onPressed: _toggleBookmark,
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-                floating: true,
-                snap: true,
+                ),
               ),
-              SliverToBoxAdapter(
-                child: Padding(
+
+              // Scrollable Content
+              Expanded(
+                child: SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -275,57 +295,61 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
                         ),
                       ),
                       const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
+              ),
 
-                      // Oynatma Butonu
-                      Container(
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: _isPlaying
-                              ? Colors.grey.shade800
-                              : Colors.black87,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 8,
-                              offset: const Offset(0, 4),
+              // Fixed Play Button at Bottom
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border(
+                    top: BorderSide(color: Colors.grey.shade300, width: 1),
+                  ),
+                ),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: _isPlaying ? Colors.grey.shade800 : Colors.black87,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: _togglePlayPause,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              _isPlaying ? Icons.stop : Icons.play_arrow,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                            const SizedBox(width: 12),
+                            Text(
+                              _isPlaying ? 'Stop Playing' : 'Listen to News',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(12),
-                            onTap: _togglePlayPause,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
-                                    _isPlaying ? Icons.stop : Icons.play_arrow,
-                                    color: Colors.white,
-                                    size: 24,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Text(
-                                    _isPlaying
-                                        ? 'Stop Playing'
-                                        : 'Listen to News',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
                       ),
-                      const SizedBox(height: 40),
-                    ],
+                    ),
                   ),
                 ),
               ),
