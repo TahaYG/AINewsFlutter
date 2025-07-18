@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../services/tts_service.dart';
 
 class ProfilEkrani extends StatelessWidget {
@@ -75,7 +74,7 @@ class ProfilEkrani extends StatelessWidget {
             child: Column(
               children: [
                 const SizedBox(height: 20),
-                
+
                 // Profile Card
                 Container(
                   width: double.infinity,
@@ -101,7 +100,8 @@ class ProfilEkrani extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(40),
-                          border: Border.all(color: Colors.white.withOpacity(0.3)),
+                          border:
+                              Border.all(color: Colors.white.withOpacity(0.3)),
                         ),
                         child: Icon(
                           Icons.person,
@@ -109,9 +109,9 @@ class ProfilEkrani extends StatelessWidget {
                           color: Colors.white,
                         ),
                       ),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // Username Label
                       Text(
                         "Kullanıcı Adı",
@@ -121,9 +121,9 @@ class ProfilEkrani extends StatelessWidget {
                           fontWeight: FontWeight.w500,
                         ),
                       ),
-                      
+
                       const SizedBox(height: 8),
-                      
+
                       // Username Value
                       Text(
                         authService.username ?? 'Kullanıcı Adı Yüklenemedi',
@@ -133,22 +133,25 @@ class ProfilEkrani extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                         ),
                       ),
-                      
+
                       const SizedBox(height: 20),
-                      
+
                       // Role Badges
                       if (authService.isAdmin)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
                             color: Colors.red.withOpacity(0.9),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white.withOpacity(0.3)),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.3)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.admin_panel_settings, color: Colors.white, size: 18),
+                              Icon(Icons.admin_panel_settings,
+                                  color: Colors.white, size: 18),
                               const SizedBox(width: 8),
                               Text(
                                 'Admin',
@@ -163,16 +166,19 @@ class ProfilEkrani extends StatelessWidget {
                         ),
                       if (!authService.isAdmin && authService.isModerator)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 8),
                           decoration: BoxDecoration(
                             color: Colors.orange.withOpacity(0.9),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: Colors.white.withOpacity(0.3)),
+                            border: Border.all(
+                                color: Colors.white.withOpacity(0.3)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.security, color: Colors.white, size: 18),
+                              Icon(Icons.security,
+                                  color: Colors.white, size: 18),
                               const SizedBox(width: 8),
                               Text(
                                 'Moderatör',
@@ -188,9 +194,9 @@ class ProfilEkrani extends StatelessWidget {
                     ],
                   ),
                 ),
-                
+
                 const Spacer(),
-                
+
                 // Logout Button
                 Container(
                   width: double.infinity,
@@ -220,8 +226,10 @@ class ProfilEkrani extends StatelessWidget {
                         // 1. Önce sesli okumayı durdur.
                         Provider.of<TtsService>(context, listen: false).stop();
                         // 2. Sonra çıkış yap.
-                        Provider.of<AuthService>(context, listen: false).logout();
-                        Navigator.of(context).popUntil((route) => route.isFirst);
+                        Provider.of<AuthService>(context, listen: false)
+                            .logout();
+                        Navigator.of(context)
+                            .popUntil((route) => route.isFirst);
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -244,7 +252,7 @@ class ProfilEkrani extends StatelessWidget {
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 40),
               ],
             ),

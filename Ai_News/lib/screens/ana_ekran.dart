@@ -191,7 +191,7 @@ class _AnaEkranState extends State<AnaEkran>
                         const SizedBox(width: 8),
                         _buildModernActionButton(
                           icon: Icons.queue_music_rounded,
-                          onPressed: () {
+                          onPressed: () async {
                             final activeTabIndex = _tabController?.index ?? 0;
                             final activeKategoriId =
                                 tumKategoriler[activeTabIndex].id;
@@ -199,7 +199,7 @@ class _AnaEkranState extends State<AnaEkran>
                                 _pagingControllers[activeKategoriId];
                             if (activeController?.itemList != null &&
                                 activeController!.itemList!.isNotEmpty) {
-                              Navigator.push(
+                              await Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder: (context) => NewsPlayerScreen(
@@ -208,6 +208,8 @@ class _AnaEkranState extends State<AnaEkran>
                                   ),
                                 ),
                               );
+                              // NewsPlayerScreen'den çıkıldıktan sonra TTS'i durdur
+                              Provider.of<TtsService>(context, listen: false).stop();
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(

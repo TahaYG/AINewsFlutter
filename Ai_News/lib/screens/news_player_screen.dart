@@ -51,7 +51,8 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
         .removeListener(_onTtsProgress);
     Provider.of<TtsService>(context, listen: false)
         .removeListener(_onTtsCompleteForNext);
-    _ttsService?.stop();
+    // NewsPlayerScreen'dan çıkıldığında TTS'i durdur
+    Provider.of<TtsService>(context, listen: false).stop();
     _lyricsScrollController.dispose();
     super.dispose();
   }

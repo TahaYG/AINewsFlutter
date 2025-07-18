@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
-import 'kayit_ekrani.dart';
 
 class GirisEkrani extends StatefulWidget {
   const GirisEkrani({super.key});
