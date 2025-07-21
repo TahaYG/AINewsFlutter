@@ -8,7 +8,7 @@ import '../models/haber.dart';
 
 /// API servisi - backend ile iletişim sağlar
 class ApiService {
-  static const String _baseUrl = 'http://10.0.2.2:5175';
+  static const String baseUrl = 'http://10.0.2.2:5175';
   static const int _pageSize = 10;
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
@@ -26,7 +26,7 @@ class ApiService {
   /// Kullanıcı girişi - username ve password ile giriş yapar
   Future<Map<String, dynamic>?> login(String username, String password) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/api/Auth/login'),
+      Uri.parse('$baseUrl/api/Auth/login'),
       headers: {'Content-Type': 'application/json; charset=UTF-8'},
       body: jsonEncode({'username': username, 'password': password}),
     );
@@ -46,7 +46,7 @@ class ApiService {
   /// Yeni kullanıcı kaydı - hata durumunda mesaj döndürür
   Future<String?> register(String username, String password) async {
     final response = await http.post(
-      Uri.parse('$_baseUrl/api/Auth/register'),
+      Uri.parse('$baseUrl/api/Auth/register'),
       headers: await _getHeaders(),
       body: jsonEncode({'username': username, 'password': password}),
     );
@@ -62,7 +62,7 @@ class ApiService {
   // --- YER İŞARETİ METOTLARI ---
   /// Kullanıcının yer işaretli haberlerini getirir
   Future<List<Haber>> getYerIsaretliHaberler() async {
-    final response = await http.get(Uri.parse('$_baseUrl/api/YerIsaretleri'),
+    final response = await http.get(Uri.parse('$baseUrl/api/YerIsaretleri'),
         headers: await _getHeaders());
     if (response.statusCode == 200) {
       List<dynamic> body = jsonDecode(utf8.decode(response.bodyBytes));
@@ -74,13 +74,13 @@ class ApiService {
 
   /// Haberi yer işaretlerine ekler
   Future<void> yerIsaretiEkle(int haberId) async {
-    await http.post(Uri.parse('$_baseUrl/api/YerIsaretleri/$haberId'),
+    await http.post(Uri.parse('$baseUrl/api/YerIsaretleri/$haberId'),
         headers: await _getHeaders());
   }
 
   /// Haberi yer işaretlerinden siler
   Future<void> yerIsaretiSil(int haberId) async {
-    await http.delete(Uri.parse('$_baseUrl/api/YerIsaretleri/$haberId'),
+    await http.delete(Uri.parse('$baseUrl/api/YerIsaretleri/$haberId'),
         headers: await _getHeaders());
   }
 
@@ -89,7 +89,7 @@ class ApiService {
   Future<List<Kategori>> getKategoriler() async {
     try {
       final response = await http
-          .get(Uri.parse('$_baseUrl/api/Kategoriler'))
+          .get(Uri.parse('$baseUrl/api/Kategoriler'))
           .timeout(const Duration(seconds: 15));
       if (response.statusCode == 200) {
         List<dynamic> body = jsonDecode(utf8.decode(response.bodyBytes));
@@ -117,7 +117,7 @@ class ApiService {
 
     // DÜZELTME: API'nizdeki Flutter için olan endpoint'in doğru adresi "paged"
     final url =
-        '$_baseUrl/api/Haberler/paged?pageNumber=$pageNumber&pageSize=$_pageSize$kategoriQuery';
+        '$baseUrl/api/Haberler/paged?pageNumber=$pageNumber&pageSize=$_pageSize$kategoriQuery';
 
     try {
       final response =
@@ -154,7 +154,7 @@ class ApiService {
   Future<bool> haberTiklandi(int haberId) async {
     // C# Controller'ınızdaki metoda uygun olarak PUT kullanıyoruz.
     final response = await http.put(
-        Uri.parse('$_baseUrl/api/Haberler/$haberId/increment-click'),
+        Uri.parse('$baseUrl/api/Haberler/$haberId/increment-click'),
         headers: await _getHeaders());
     return response.statusCode == 200;
   }
@@ -163,7 +163,7 @@ class ApiService {
   Future<bool> haberOkundu(int haberId) async {
     // C# Controller'ınızdaki metoda uygun olarak PUT kullanıyoruz.
     final response = await http.put(
-        Uri.parse('$_baseUrl/api/Haberler/$haberId/increment-read'),
+        Uri.parse('$baseUrl/api/Haberler/$haberId/increment-read'),
         headers: await _getHeaders());
     return response.statusCode == 200;
   }

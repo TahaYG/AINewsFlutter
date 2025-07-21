@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/haber.dart';
@@ -78,6 +79,12 @@ class _HaberKartiState extends State<HaberKarti> {
 
   @override
   Widget build(BuildContext context) {
+    final bool hasImage =
+        widget.haber.resimYolu != null && widget.haber.resimYolu!.isNotEmpty;
+    final Color textColor = hasImage ? Colors.white : Colors.black87;
+    final Color dateColor =
+        hasImage ? Colors.white.withOpacity(0.9) : Colors.grey.shade700;
+    final Color bookmarkColor = hasImage ? Colors.white : Colors.black;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       height: 200,
@@ -88,34 +95,71 @@ class _HaberKartiState extends State<HaberKarti> {
         borderRadius: BorderRadius.circular(16),
         child: Stack(
           children: [
-            // Background with gradient - arka plan gradyanı
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Colors.grey.shade100,
-                    Colors.grey.shade200,
-                    Colors.grey.shade300,
-                  ],
+            if (hasImage)
+              Positioned.fill(
+                child: Image.network(
+                  ApiService.baseUrl +
+                      widget.haber.resimYolu!, // Tam URL'yi oluştur
+                  fit: BoxFit.cover,
+                  loadingBuilder: (context, child, progress) {
+                    if (progress == null) return child;
+                    return const Center(child: CircularProgressIndicator());
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                        color: Colors.grey.shade300,
+                        child: const Icon(Icons.image_not_supported_outlined,
+                            color: Colors.grey));
+                  },
                 ),
               ),
-            ),
 
-            // Blur effect overlay - bulanık efekt katmanı
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.white.withOpacity(0.1),
-                    Colors.white.withOpacity(0.3),
-                  ],
+            // Arka plan gradyanı (Resim yoksa gösterilir)
+            if (!hasImage)
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.grey.shade100,
+                      Colors.grey.shade200,
+                      Colors.grey.shade300,
+                    ],
+                  ),
                 ),
               ),
-            ),
+
+            if (hasImage)
+              Positioned.fill(
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(
+                      sigmaX: 1.5,
+                      sigmaY: 1.5), // Blur miktarını buradan ayarlayabilirsiniz
+                  child: Container(
+                    color: Colors.black.withOpacity(
+                        0.1), // Blur'u daha belirgin hale getiren hafif bir katman
+                  ),
+                ),
+              ),
+
+            // Karartma efekti katmanı (Sadece resim varsa gösterilir)
+            if (hasImage)
+              Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withOpacity(0.8),
+                      ],
+                      stops: const [
+                        0.3,
+                        1.0
+                      ]),
+                ),
+              ),
 
             // Content - ana içerik
             Material(
@@ -147,7 +191,7 @@ class _HaberKartiState extends State<HaberKarti> {
                           DateFormat('dd MMM yyyy', 'en_US')
                               .format(widget.haber.yayinTarihi),
                           style: TextStyle(
-                            color: Colors.grey.shade600,
+                            color: dateColor,
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                           ),
@@ -166,10 +210,10 @@ class _HaberKartiState extends State<HaberKarti> {
                             Expanded(
                               child: Text(
                                 widget.haber.baslik,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
-                                  color: Colors.black87,
+                                  color: textColor,
                                   height: 1.3,
                                 ),
                                 maxLines: 3,
@@ -193,8 +237,8 @@ class _HaberKartiState extends State<HaberKarti> {
                                           : Icons.bookmark_border,
                                       key: ValueKey(_isBookmarked),
                                       color: _isBookmarked
-                                          ? Colors.black
-                                          : Colors.grey.shade600,
+                                          ? bookmarkColor
+                                          : dateColor,
                                       size: 24,
                                     ),
                                   ),
