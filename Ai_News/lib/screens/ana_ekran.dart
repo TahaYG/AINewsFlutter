@@ -23,39 +23,39 @@ class _AnaEkranState extends State<AnaEkran>
     with SingleTickerProviderStateMixin {
   // Servisler
   final ApiService _apiService = ApiService();
-  
+
   // Asenkron veri yönetimi
   late Future<List<Kategori>> _kategorilerFuture;
 
   // Her kategori için ayrı pagination controller
   final Map<int, PagingController<int, Haber>> _pagingControllers = {};
-  
+
   // Tab kontrolü için controller
   TabController? _tabController;
 
   @override
   void initState() {
     super.initState();
-    
+
     // Kategorileri API'den çek
     _kategorilerFuture = _apiService.getKategoriler();
-    
+
     // Kategoriler yüklendikten sonra tab controller'ı kurulum
     _kategorilerFuture.then((kategoriler) {
       if (mounted) {
         // Tab sayısı = kategoriler + "Tümü" sekmesi
         _tabController =
             TabController(length: kategoriler.length + 1, vsync: this);
-        
+
         // Tab değişikliklerini dinle (TTS durdurmak için)
         _tabController!.addListener(_handleTabSelection);
-        
+
         // Her kategori için pagination controller kurulumu
         _setupPagingController(0); // "Tümü" sekmesi için (kategori ID = 0)
         for (var kategori in kategoriler) {
           _setupPagingController(kategori.id);
         }
-        
+
         // UI'yi güncelle
         setState(() {}); // TabController oluşturulduktan sonra arayüzü güncelle
       }
@@ -74,12 +74,12 @@ class _AnaEkranState extends State<AnaEkran>
   /// Her kategori kendi pagination state'ini tutar
   void _setupPagingController(int kategoriId) {
     final controller = PagingController<int, Haber>(firstPageKey: 1);
-    
+
     // Yeni sayfa talep edildiğinde çağrılır
     controller.addPageRequestListener((pageKey) {
       _fetchPage(pageKey, kategoriId, controller);
     });
-    
+
     _pagingControllers[kategoriId] = controller;
   }
 
@@ -91,7 +91,7 @@ class _AnaEkranState extends State<AnaEkran>
       // API'den haberleri çek
       final yeniSayfa = await _apiService.getHaberler(
           pageNumber: pageKey, kategoriId: kategoriId);
-      
+
       // Son sayfa kontrolü
       final isLastPage = yeniSayfa.sonSayfaMi;
       if (isLastPage) {
@@ -133,7 +133,7 @@ class _AnaEkranState extends State<AnaEkran>
               appBar: AppBar(title: const Text('news.ai')),
               body: const Center(child: CircularProgressIndicator()));
         }
-        
+
         // Hata durumu kontrolü
         if (kategoriSnapshot.hasError) {
           return Scaffold(
@@ -142,7 +142,7 @@ class _AnaEkranState extends State<AnaEkran>
                   child: Text(
                       'Categories could not be loaded: ${kategoriSnapshot.error}')));
         }
-        
+
         // Veri kontrolü
         if (!kategoriSnapshot.hasData || kategoriSnapshot.data!.isEmpty) {
           return Scaffold(
@@ -172,12 +172,12 @@ class _AnaEkranState extends State<AnaEkran>
                   child: Row(
                     children: [
                       // Logo ve uygulama adı
-                      Row(
+                      const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.smart_toy_outlined,
                               color: Colors.black87, size: 28),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Text(
                             'news.ai',
                             style: TextStyle(
@@ -189,7 +189,7 @@ class _AnaEkranState extends State<AnaEkran>
                         ],
                       ),
                       const Spacer(),
-                      
+
                       // TTS kontrol butonu - aktif tab'daki haberleri okur
                       _buildClassicActionButton(
                         icon:
@@ -216,7 +216,7 @@ class _AnaEkranState extends State<AnaEkran>
                             ttsService.isPlaying && ttsService.playbackId == -1,
                       ),
                       const SizedBox(width: 8),
-                      
+
                       // News Player butonu - detaylı oynatıcı ekranına git
                       _buildClassicActionButton(
                         icon: Icons.queue_music_rounded,
@@ -244,7 +244,8 @@ class _AnaEkranState extends State<AnaEkran>
                             // Haber yoksa uyarı göster
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('No news to play in this tab.'),
+                                content:
+                                    const Text('No news to play in this tab.'),
                                 backgroundColor: Colors.grey.shade800,
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(
@@ -255,15 +256,15 @@ class _AnaEkranState extends State<AnaEkran>
                         },
                       ),
                       const SizedBox(width: 8),
-                      
+
                       // Kullanıcı rolü badge'leri
                       if (authService.isAdmin)
-                        Row(
+                        const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.admin_panel_settings,
                                 size: 18, color: Colors.red),
-                            const SizedBox(width: 4),
+                            SizedBox(width: 4),
                             Text('Admin',
                                 style: TextStyle(
                                     color: Colors.red,
@@ -272,12 +273,12 @@ class _AnaEkranState extends State<AnaEkran>
                           ],
                         ),
                       if (!authService.isAdmin && authService.isModerator)
-                        Row(
+                        const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.security_outlined,
                                 size: 18, color: Colors.orange),
-                            const SizedBox(width: 4),
+                            SizedBox(width: 4),
                             Text('Mod',
                                 style: TextStyle(
                                     color: Colors.orange,
@@ -285,7 +286,7 @@ class _AnaEkranState extends State<AnaEkran>
                                     fontWeight: FontWeight.w600)),
                           ],
                         ),
-                      
+
                       // Profil butonu
                       Material(
                         color: Colors.transparent,
@@ -300,7 +301,7 @@ class _AnaEkranState extends State<AnaEkran>
                           },
                           child: Container(
                             padding: const EdgeInsets.all(10),
-                            child: Icon(
+                            child: const Icon(
                               Icons.account_circle_outlined,
                               color: Colors.black87,
                               size: 26,
@@ -323,9 +324,11 @@ class _AnaEkranState extends State<AnaEkran>
                   isScrollable: true,
                   tabAlignment: TabAlignment.start,
                   // Seçili tab için siyah nokta indicator
-                  indicator: BoxDecoration(
+                  indicator: const ShortOvalIndicator(
+                    width: 24, // istediğin kadar kısaltabilirsin
+                    height: 8,
                     color: Colors.black87,
-                    shape: BoxShape.circle,
+                    radius: 8,
                   ),
                   indicatorSize: TabBarIndicatorSize.label,
                   indicatorPadding: const EdgeInsets.only(top: 38),
@@ -333,10 +336,10 @@ class _AnaEkranState extends State<AnaEkran>
                   dividerColor: Colors.transparent,
                   labelColor: Colors.black87,
                   unselectedLabelColor: Colors.grey.shade600,
-                  labelStyle:
-                      TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
-                  unselectedLabelStyle:
-                      TextStyle(fontWeight: FontWeight.w400, fontSize: 18),
+                  labelStyle: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 18),
+                  unselectedLabelStyle: const TextStyle(
+                      fontWeight: FontWeight.w400, fontSize: 18),
                   labelPadding: const EdgeInsets.symmetric(horizontal: 2),
                   tabs: tumKategoriler
                       .map((kategori) => Tab(
@@ -403,7 +406,7 @@ class _AnaEkranState extends State<AnaEkran>
                               ),
                               child: Text(
                                 'First page could not be loaded: ${controller.error}',
-                                style: TextStyle(color: Colors.black87),
+                                style: const TextStyle(color: Colors.black87),
                               ),
                             )),
                             // Veri bulunamadı durumu
@@ -417,7 +420,7 @@ class _AnaEkranState extends State<AnaEkran>
                               ),
                               child: Text(
                                 'No news found in ${translateCategoryName(kategori.ad)} category.',
-                                style: TextStyle(color: Colors.black87),
+                                style: const TextStyle(color: Colors.black87),
                               ),
                             )),
                           ),
@@ -456,5 +459,44 @@ class _AnaEkranState extends State<AnaEkran>
         ),
       ),
     );
+  }
+}
+
+// Kısa oval (dot) indicator için özel Decoration
+class ShortOvalIndicator extends Decoration {
+  final double width;
+  final double height;
+  final Color color;
+  final double radius;
+
+  const ShortOvalIndicator({
+    this.width = 24,
+    this.height = 8,
+    this.color = Colors.black87,
+    this.radius = 8,
+  });
+
+  @override
+  BoxPainter createBoxPainter([VoidCallback? onChanged]) {
+    return _ShortOvalPainter(this);
+  }
+}
+
+class _ShortOvalPainter extends BoxPainter {
+  final ShortOvalIndicator decoration;
+
+  _ShortOvalPainter(this.decoration);
+
+  @override
+  void paint(Canvas canvas, Offset offset, ImageConfiguration configuration) {
+    final Paint paint = Paint()..color = decoration.color;
+    final double x =
+        offset.dx + (configuration.size!.width - decoration.width) / 2;
+    final double y =
+        offset.dy + configuration.size!.height - decoration.height - 4;
+    final Rect rect = Rect.fromLTWH(x, y, decoration.width, decoration.height);
+    final RRect rrect =
+        RRect.fromRectAndRadius(rect, Radius.circular(decoration.radius));
+    canvas.drawRRect(rrect, paint);
   }
 }
