@@ -95,7 +95,7 @@ lib/
    ```
 
 3. **Configure API endpoint**
-   - Update the `_baseUrl` in `lib/services/api_service.dart`
+   - Update the `baseUrl` in `lib/services/api_service.dart`
    - For Android emulator: `http://10.0.2.2:5175`
    - For iOS simulator: `http://localhost:5175`
    - For physical device: Use your computer's IP address
@@ -147,7 +147,7 @@ The app connects to a REST API backend with the following endpoints:
 ### Environment Setup
 ```dart
 // lib/services/api_service.dart
-static const String _baseUrl = 'YOUR_API_URL_HERE';
+static const String baseUrl = 'YOUR_API_URL_HERE';
 ```
 
 ### Localization
