@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import 'kaydedilenler_ekrani.dart';
 
+/// Kullanıcı profil ekranı - profil bilgileri, rol badge'leri ve menü seçenekleri
 class ProfilEkrani extends StatelessWidget {
   const ProfilEkrani({super.key});
 
@@ -48,10 +49,10 @@ class ProfilEkrani extends StatelessWidget {
               children: [
                 Column(
                   children: [
-                    // Profil Bilgileri
+                    // Profil bilgileri bölümü
                     Column(
                       children: [
-                        // Profil Resmi
+                        // Profil resmi - varsayılan avatar
                         Container(
                           width: 100,
                           height: 100,
@@ -69,7 +70,7 @@ class ProfilEkrani extends StatelessWidget {
                         ),
                         const SizedBox(height: 20),
 
-                        // Kullanıcı Adı
+                        // Kullanıcı adı gösterimi
                         Text(
                           authService.username ?? 'User',
                           style: const TextStyle(
@@ -112,13 +113,14 @@ class ProfilEkrani extends StatelessWidget {
 
                     const SizedBox(height: 32),
 
-                    // Menu Items
+                    // Menü öğeleri - navigasyon seçenekleri
                     Material(
                       color: Colors.grey.shade50,
                       borderRadius: BorderRadius.circular(12),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(12),
                         onTap: () {
+                          // Yer işaretli haberler ekranına git
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -160,7 +162,7 @@ class ProfilEkrani extends StatelessWidget {
                   ],
                 ),
 
-                // Logout Button - Bu artık en altta olacak
+                // Çıkış butonu - sayfanın en altında konumlandırılmış
                 Container(
                   width: double.infinity,
                   decoration: BoxDecoration(
@@ -171,6 +173,7 @@ class ProfilEkrani extends StatelessWidget {
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
                       onTap: () {
+                        // Çıkış onay dialog'u göster
                         showDialog(
                           context: context,
                           builder: (BuildContext context) {
@@ -201,6 +204,7 @@ class ProfilEkrani extends StatelessWidget {
                                 ),
                                 TextButton(
                                   onPressed: () {
+                                    // Çıkış işlemini gerçekleştir
                                     authService.logout();
                                     Navigator.of(context).pop();
                                     Navigator.of(context)

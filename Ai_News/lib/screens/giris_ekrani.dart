@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 
+/// Kullanıcı giriş ekranı - kimlik doğrulama işlemlerini yönetir
 class GirisEkrani extends StatefulWidget {
   const GirisEkrani({super.key});
 
@@ -10,10 +11,13 @@ class GirisEkrani extends StatefulWidget {
 }
 
 class _GirisEkraniState extends State<GirisEkrani> {
+  // Form kontrolü için text controller'lar
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  /// Giriş işlemini gerçekleştirir - form validasyonu ve API çağrısı
   Future<void> _submit() async {
+    // Boş alan kontrolü
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -27,12 +31,14 @@ class _GirisEkraniState extends State<GirisEkrani> {
       return;
     }
 
+    // AuthService üzerinden giriş denemesi
     final authService = Provider.of<AuthService>(context, listen: false);
     bool success = await authService.login(
       _usernameController.text,
       _passwordController.text,
     );
 
+    // Başarısız giriş durumunda hata mesajı göster
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -58,7 +64,7 @@ class _GirisEkraniState extends State<GirisEkrani> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo/Title
+                // Logo ve başlık bölümü
                 Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
@@ -97,7 +103,7 @@ class _GirisEkraniState extends State<GirisEkrani> {
 
                 const SizedBox(height: 40),
 
-                // Login Form
+                // Giriş formu bölümü
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -125,7 +131,7 @@ class _GirisEkraniState extends State<GirisEkrani> {
 
                       const SizedBox(height: 32),
 
-                      // Username Field
+                      // Kullanıcı adı input alanı
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.grey.shade50,
@@ -148,7 +154,7 @@ class _GirisEkraniState extends State<GirisEkrani> {
 
                       const SizedBox(height: 16),
 
-                      // Password Field
+                      // Şifre input alanı
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.grey.shade50,
@@ -172,7 +178,7 @@ class _GirisEkraniState extends State<GirisEkrani> {
 
                       const SizedBox(height: 24),
 
-                      // Login Button
+                      // Giriş butonu
                       Container(
                         width: double.infinity,
                         decoration: BoxDecoration(
@@ -216,7 +222,7 @@ class _GirisEkraniState extends State<GirisEkrani> {
 
                       const SizedBox(height: 16),
 
-                      // Register Link
+                      // Kayıt ol bağlantısı
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.grey.shade50,

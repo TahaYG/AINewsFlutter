@@ -11,6 +11,8 @@ import '../services/tts_service.dart';
 import 'profil_ekrani.dart';
 import 'news_player_screen.dart';
 
+/// Ana haber ekranı - kategoriler ve haber listesi
+/// TabController ile kategori geçişi ve infinite scroll pagination kullanır
 class AnaEkran extends StatefulWidget {
   const AnaEkran({super.key});
   @override
@@ -19,30 +21,48 @@ class AnaEkran extends StatefulWidget {
 
 class _AnaEkranState extends State<AnaEkran>
     with SingleTickerProviderStateMixin {
+  // Servisler
   final ApiService _apiService = ApiService();
+  
+  // Asenkron veri yönetimi
   late Future<List<Kategori>> _kategorilerFuture;
 
+  // Her kategori için ayrı pagination controller
   final Map<int, PagingController<int, Haber>> _pagingControllers = {};
+  
+  // Tab kontrolü için controller
   TabController? _tabController;
 
   @override
   void initState() {
     super.initState();
+    
+    // Kategorileri API'den çek
     _kategorilerFuture = _apiService.getKategoriler();
+    
+    // Kategoriler yüklendikten sonra tab controller'ı kurulum
     _kategorilerFuture.then((kategoriler) {
       if (mounted) {
+        // Tab sayısı = kategoriler + "Tümü" sekmesi
         _tabController =
             TabController(length: kategoriler.length + 1, vsync: this);
+        
+        // Tab değişikliklerini dinle (TTS durdurmak için)
         _tabController!.addListener(_handleTabSelection);
-        _setupPagingController(0); // "Tümü" sekmesi için
+        
+        // Her kategori için pagination controller kurulumu
+        _setupPagingController(0); // "Tümü" sekmesi için (kategori ID = 0)
         for (var kategori in kategoriler) {
           _setupPagingController(kategori.id);
         }
+        
+        // UI'yi güncelle
         setState(() {}); // TabController oluşturulduktan sonra arayüzü güncelle
       }
     });
   }
 
+  /// Tab seçimi değiştiğinde çağrılır - aktif TTS playback'i durdurur
   void _handleTabSelection() {
     // Sekme değiştiğinde, devam eden bir okuma varsa durdur.
     if (_tabController!.indexIsChanging) {
@@ -50,33 +70,47 @@ class _AnaEkranState extends State<AnaEkran>
     }
   }
 
+  /// Belirtilen kategori ID'si için pagination controller kurulumu
+  /// Her kategori kendi pagination state'ini tutar
   void _setupPagingController(int kategoriId) {
     final controller = PagingController<int, Haber>(firstPageKey: 1);
+    
+    // Yeni sayfa talep edildiğinde çağrılır
     controller.addPageRequestListener((pageKey) {
       _fetchPage(pageKey, kategoriId, controller);
     });
+    
     _pagingControllers[kategoriId] = controller;
   }
 
+  /// API'den belirtilen sayfa ve kategori için haberleri çeker
+  /// Infinite scroll pagination için kullanılır
   Future<void> _fetchPage(int pageKey, int kategoriId,
       PagingController<int, Haber> controller) async {
     try {
+      // API'den haberleri çek
       final yeniSayfa = await _apiService.getHaberler(
           pageNumber: pageKey, kategoriId: kategoriId);
+      
+      // Son sayfa kontrolü
       final isLastPage = yeniSayfa.sonSayfaMi;
       if (isLastPage) {
+        // Son sayfa ise pagination'ı sonlandır
         controller.appendLastPage(yeniSayfa.haberler);
       } else {
+        // Daha fazla sayfa var, devam et
         final nextPageKey = pageKey + 1;
         controller.appendPage(yeniSayfa.haberler, nextPageKey);
       }
     } catch (error) {
+      // Hata durumunda controller'a bildir
       controller.error = error;
     }
   }
 
   @override
   void dispose() {
+    // Memory leak önleme - tüm controller'ları temizle
     _pagingControllers.forEach((_, controller) => controller.dispose());
     _tabController?.removeListener(_handleTabSelection);
     _tabController?.dispose();
@@ -85,18 +119,22 @@ class _AnaEkranState extends State<AnaEkran>
 
   @override
   Widget build(BuildContext context) {
+    // Provider'lardan servisleri al
     final authService = Provider.of<AuthService>(context);
     final ttsService = Provider.of<TtsService>(context);
 
     return FutureBuilder<List<Kategori>>(
       future: _kategorilerFuture,
       builder: (context, kategoriSnapshot) {
+        // Yükleme durumu kontrolü
         if (kategoriSnapshot.connectionState == ConnectionState.waiting ||
             _tabController == null) {
           return Scaffold(
               appBar: AppBar(title: const Text('news.ai')),
               body: const Center(child: CircularProgressIndicator()));
         }
+        
+        // Hata durumu kontrolü
         if (kategoriSnapshot.hasError) {
           return Scaffold(
               appBar: AppBar(title: const Text('Error')),
@@ -104,6 +142,8 @@ class _AnaEkranState extends State<AnaEkran>
                   child: Text(
                       'Categories could not be loaded: ${kategoriSnapshot.error}')));
         }
+        
+        // Veri kontrolü
         if (!kategoriSnapshot.hasData || kategoriSnapshot.data!.isEmpty) {
           return Scaffold(
               appBar: AppBar(title: const Text('No Data')),
@@ -111,6 +151,7 @@ class _AnaEkranState extends State<AnaEkran>
         }
 
         final kategoriler = kategoriSnapshot.data!;
+        // "Tümü" kategorisini başa ekle
         final tumKategoriler = [Kategori(id: 0, ad: 'All'), ...kategoriler];
 
         // DEĞİŞİKLİK: DefaultTabController kaldırıldı. Artık kendi controller'ımızı kullanıyoruz.
@@ -118,7 +159,7 @@ class _AnaEkranState extends State<AnaEkran>
           backgroundColor: Colors.white,
           body: Column(
             children: [
-              // Modern AppBar
+              // Modern AppBar - özel tasarım
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -130,12 +171,13 @@ class _AnaEkranState extends State<AnaEkran>
                 child: SafeArea(
                   child: Row(
                     children: [
-                      const Row(
+                      // Logo ve uygulama adı
+                      Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.smart_toy_outlined,
                               color: Colors.black87, size: 28),
-                          SizedBox(width: 8),
+                          const SizedBox(width: 8),
                           Text(
                             'news.ai',
                             style: TextStyle(
@@ -147,6 +189,8 @@ class _AnaEkranState extends State<AnaEkran>
                         ],
                       ),
                       const Spacer(),
+                      
+                      // TTS kontrol butonu - aktif tab'daki haberleri okur
                       _buildClassicActionButton(
                         icon:
                             ttsService.isPlaying && ttsService.playbackId == -1
@@ -156,6 +200,7 @@ class _AnaEkranState extends State<AnaEkran>
                           if (ttsService.isPlaying) {
                             ttsService.stop();
                           } else {
+                            // Aktif tab'daki haberleri al ve okumaya başla
                             final activeTabIndex = _tabController?.index ?? 0;
                             final activeKategoriId =
                                 tumKategoriler[activeTabIndex].id;
@@ -171,6 +216,8 @@ class _AnaEkranState extends State<AnaEkran>
                             ttsService.isPlaying && ttsService.playbackId == -1,
                       ),
                       const SizedBox(width: 8),
+                      
+                      // News Player butonu - detaylı oynatıcı ekranına git
                       _buildClassicActionButton(
                         icon: Icons.queue_music_rounded,
                         onPressed: () async {
@@ -194,10 +241,10 @@ class _AnaEkranState extends State<AnaEkran>
                             Provider.of<TtsService>(context, listen: false)
                                 .stop();
                           } else {
+                            // Haber yoksa uyarı göster
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content:
-                                    const Text('No news to play in this tab.'),
+                                content: Text('No news to play in this tab.'),
                                 backgroundColor: Colors.grey.shade800,
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(
@@ -208,13 +255,15 @@ class _AnaEkranState extends State<AnaEkran>
                         },
                       ),
                       const SizedBox(width: 8),
+                      
+                      // Kullanıcı rolü badge'leri
                       if (authService.isAdmin)
-                        const Row(
+                        Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.admin_panel_settings,
                                 size: 18, color: Colors.red),
-                            SizedBox(width: 4),
+                            const SizedBox(width: 4),
                             Text('Admin',
                                 style: TextStyle(
                                     color: Colors.red,
@@ -223,12 +272,12 @@ class _AnaEkranState extends State<AnaEkran>
                           ],
                         ),
                       if (!authService.isAdmin && authService.isModerator)
-                        const Row(
+                        Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.security_outlined,
                                 size: 18, color: Colors.orange),
-                            SizedBox(width: 4),
+                            const SizedBox(width: 4),
                             Text('Mod',
                                 style: TextStyle(
                                     color: Colors.orange,
@@ -236,6 +285,8 @@ class _AnaEkranState extends State<AnaEkran>
                                     fontWeight: FontWeight.w600)),
                           ],
                         ),
+                      
+                      // Profil butonu
                       Material(
                         color: Colors.transparent,
                         child: InkWell(
@@ -249,7 +300,7 @@ class _AnaEkranState extends State<AnaEkran>
                           },
                           child: Container(
                             padding: const EdgeInsets.all(10),
-                            child: const Icon(
+                            child: Icon(
                               Icons.account_circle_outlined,
                               color: Colors.black87,
                               size: 26,
@@ -262,7 +313,7 @@ class _AnaEkranState extends State<AnaEkran>
                 ),
               ),
 
-              // Modern Tab Bar
+              // Modern Tab Bar - kategori seçimi
               Container(
                 margin: const EdgeInsets.only(
                     left: 16, right: 16, top: 8, bottom: 0),
@@ -271,7 +322,8 @@ class _AnaEkranState extends State<AnaEkran>
                   padding: EdgeInsets.zero,
                   isScrollable: true,
                   tabAlignment: TabAlignment.start,
-                  indicator: const BoxDecoration(
+                  // Seçili tab için siyah nokta indicator
+                  indicator: BoxDecoration(
                     color: Colors.black87,
                     shape: BoxShape.circle,
                   ),
@@ -281,10 +333,10 @@ class _AnaEkranState extends State<AnaEkran>
                   dividerColor: Colors.transparent,
                   labelColor: Colors.black87,
                   unselectedLabelColor: Colors.grey.shade600,
-                  labelStyle: const TextStyle(
-                      fontWeight: FontWeight.w600, fontSize: 18),
-                  unselectedLabelStyle: const TextStyle(
-                      fontWeight: FontWeight.w400, fontSize: 18),
+                  labelStyle:
+                      TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
+                  unselectedLabelStyle:
+                      TextStyle(fontWeight: FontWeight.w400, fontSize: 18),
                   labelPadding: const EdgeInsets.symmetric(horizontal: 2),
                   tabs: tumKategoriler
                       .map((kategori) => Tab(
@@ -294,11 +346,13 @@ class _AnaEkranState extends State<AnaEkran>
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  // Kategori ikonu
                                   Icon(
                                     getIconForCategory(kategori.ad),
                                     size: 18,
                                   ),
                                   const SizedBox(width: 8),
+                                  // Kategori adı (çevrilmiş)
                                   Text(translateCategoryName(kategori.ad))
                                 ],
                               ),
@@ -308,7 +362,7 @@ class _AnaEkranState extends State<AnaEkran>
                 ),
               ),
 
-              // Tab Content
+              // Tab Content - haber listesi
               Expanded(
                 child: TabBarView(
                   controller: _tabController,
@@ -330,6 +384,7 @@ class _AnaEkranState extends State<AnaEkran>
                         child: PagedListView<int, Haber>(
                           pagingController: controller,
                           builderDelegate: PagedChildBuilderDelegate<Haber>(
+                            // Her haber için kart widget'ı
                             itemBuilder: (context, haber, index) => Container(
                               margin: const EdgeInsets.only(bottom: 12),
                               child: HaberKarti(
@@ -337,6 +392,7 @@ class _AnaEkranState extends State<AnaEkran>
                                 onGeriDonuldu: () => controller.refresh(),
                               ),
                             ),
+                            // İlk sayfa hata durumu
                             firstPageErrorIndicatorBuilder: (context) => Center(
                                 child: Container(
                               padding: const EdgeInsets.all(20),
@@ -347,9 +403,10 @@ class _AnaEkranState extends State<AnaEkran>
                               ),
                               child: Text(
                                 'First page could not be loaded: ${controller.error}',
-                                style: const TextStyle(color: Colors.black87),
+                                style: TextStyle(color: Colors.black87),
                               ),
                             )),
+                            // Veri bulunamadı durumu
                             noItemsFoundIndicatorBuilder: (context) => Center(
                                 child: Container(
                               padding: const EdgeInsets.all(20),
@@ -360,7 +417,7 @@ class _AnaEkranState extends State<AnaEkran>
                               ),
                               child: Text(
                                 'No news found in ${translateCategoryName(kategori.ad)} category.',
-                                style: const TextStyle(color: Colors.black87),
+                                style: TextStyle(color: Colors.black87),
                               ),
                             )),
                           ),
@@ -377,6 +434,8 @@ class _AnaEkranState extends State<AnaEkran>
     );
   }
 
+  /// Klasik stil aksiyon butonu oluşturucu
+  /// AppBar'daki butonlar için tutarlı tasarım sağlar
   Widget _buildClassicActionButton({
     required IconData icon,
     required VoidCallback onPressed,

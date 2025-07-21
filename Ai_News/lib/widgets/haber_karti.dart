@@ -6,6 +6,7 @@ import '../services/api_service.dart';
 
 // DEĞİŞİKLİK: Widget, yer işareti durumunu (kaydedildi/kaydedilmedi)
 // takip edebilmesi için StatefulWidget'a dönüştürüldü.
+/// Haber kartı widget'ı - her haberi görsel olarak temsil eder
 class HaberKarti extends StatefulWidget {
   final Haber haber;
   final VoidCallback onGeriDonuldu;
@@ -33,6 +34,7 @@ class _HaberKartiState extends State<HaberKarti> {
   }
 
   // API'ye gidip bu haberin kullanıcının yer işaretlerinde olup olmadığını kontrol eder.
+  /// Haberin yer işaretli olup olmadığını kontrol eder
   Future<void> _checkIfBookmarked() async {
     // Not: Bu basit kontrol için tüm kayıtlıları çekiyoruz.
     // Çok büyük uygulamalarda bu, API'den tek bir sorgu ile yapılabilir.
@@ -49,6 +51,7 @@ class _HaberKartiState extends State<HaberKarti> {
   }
 
   // Bookmark butonuna basıldığında çalışır.
+  /// Yer işareti durumunu toggle eder (ekle/kaldır)
   Future<void> _toggleBookmark() async {
     // 1. Arayüzü anında güncelle (İyimser Yaklaşım)
     setState(() {
@@ -85,7 +88,7 @@ class _HaberKartiState extends State<HaberKarti> {
         borderRadius: BorderRadius.circular(16),
         child: Stack(
           children: [
-            // Background with gradient
+            // Background with gradient - arka plan gradyanı
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -100,7 +103,7 @@ class _HaberKartiState extends State<HaberKarti> {
               ),
             ),
 
-            // Blur effect overlay
+            // Blur effect overlay - bulanık efekt katmanı
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -114,12 +117,13 @@ class _HaberKartiState extends State<HaberKarti> {
               ),
             ),
 
-            // Content
+            // Content - ana içerik
             Material(
               color: Colors.transparent,
               child: InkWell(
                 borderRadius: BorderRadius.circular(16),
                 onTap: () async {
+                  // Haber tıklanma sayısını artır ve detay sayfasına git
                   await _apiService.haberTiklandi(widget.haber.id);
                   if (context.mounted) {
                     Navigator.push(
@@ -135,7 +139,7 @@ class _HaberKartiState extends State<HaberKarti> {
                   padding: const EdgeInsets.all(20),
                   child: Stack(
                     children: [
-                      // Date - Top Right
+                      // Date - Top Right - tarih sağ üstte
                       Positioned(
                         top: 0,
                         right: 0,
@@ -150,7 +154,7 @@ class _HaberKartiState extends State<HaberKarti> {
                         ),
                       ),
 
-                      // Title and Bookmark - Bottom Row
+                      // Title and Bookmark - Bottom Row - başlık ve yer işareti alt satırda
                       Positioned(
                         left: 0,
                         right: 0,
@@ -158,6 +162,7 @@ class _HaberKartiState extends State<HaberKarti> {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
+                            // Haber başlığı
                             Expanded(
                               child: Text(
                                 widget.haber.baslik,
@@ -172,6 +177,7 @@ class _HaberKartiState extends State<HaberKarti> {
                               ),
                             ),
                             const SizedBox(width: 12),
+                            // Yer işareti butonu
                             Material(
                               color: Colors.transparent,
                               child: InkWell(

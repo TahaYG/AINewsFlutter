@@ -3,6 +3,7 @@ import '../services/api_service.dart';
 import '../models/haber.dart';
 import '../widgets/haber_karti.dart';
 
+/// Kaydedilen haberler ekranı - kullanıcının yer işaretlediği haberleri listeler
 class KaydedilenlerEkrani extends StatefulWidget {
   const KaydedilenlerEkrani({super.key});
 
@@ -11,15 +12,19 @@ class KaydedilenlerEkrani extends StatefulWidget {
 }
 
 class _KaydedilenlerEkraniState extends State<KaydedilenlerEkrani> {
+  // API servis instance'ı
   final ApiService _apiService = ApiService();
+  // Yer işaretli haberleri tutacak Future
   late Future<List<Haber>> _kaydedilenHaberlerFuture;
 
   @override
   void initState() {
     super.initState();
+    // Sayfa açıldığında yer işaretli haberleri yükle
     _kaydedilenHaberlerFuture = _apiService.getYerIsaretliHaberler();
   }
 
+  /// Listeyi yeniler - pull to refresh için kullanılır
   void _yenile() {
     setState(() {
       _kaydedilenHaberlerFuture = _apiService.getYerIsaretliHaberler();
@@ -51,6 +56,7 @@ class _KaydedilenlerEkraniState extends State<KaydedilenlerEkrani> {
       body: FutureBuilder<List<Haber>>(
         future: _kaydedilenHaberlerFuture,
         builder: (context, snapshot) {
+          // Yükleme durumu göstergesi
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
               child: CircularProgressIndicator(
@@ -58,6 +64,7 @@ class _KaydedilenlerEkraniState extends State<KaydedilenlerEkrani> {
               ),
             );
           }
+          // Hata durumu gösterimi
           if (snapshot.hasError) {
             return Center(
               child: Container(
@@ -98,6 +105,7 @@ class _KaydedilenlerEkraniState extends State<KaydedilenlerEkrani> {
               ),
             );
           }
+          // Boş liste durumu gösterimi
           if (!snapshot.hasData || snapshot.data!.isEmpty) {
             return Center(
               child: Container(
@@ -139,10 +147,12 @@ class _KaydedilenlerEkraniState extends State<KaydedilenlerEkrani> {
             );
           }
 
+          // Başarılı veri yükleme - haber listesi gösterimi
           final haberler = snapshot.data!;
           return RefreshIndicator(
             color: Colors.black87,
             onRefresh: () async {
+              // Pull to refresh ile listeyi yenile
               setState(() {
                 _kaydedilenHaberlerFuture =
                     _apiService.getYerIsaretliHaberler();
@@ -158,6 +168,7 @@ class _KaydedilenlerEkraniState extends State<KaydedilenlerEkrani> {
                   child: HaberKarti(
                     haber: haber,
                     onGeriDonuldu: () {
+                      // Haber detayından geri dönüldüğünde listeyi yenile
                       setState(() {
                         _kaydedilenHaberlerFuture =
                             _apiService.getYerIsaretliHaberler();

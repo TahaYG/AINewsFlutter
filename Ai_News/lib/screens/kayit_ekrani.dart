@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 
+/// Kullanıcı kayıt ekranı - yeni hesap oluşturma işlemlerini yönetir
 class KayitEkrani extends StatefulWidget {
   const KayitEkrani({super.key});
 
@@ -9,11 +10,14 @@ class KayitEkrani extends StatefulWidget {
 }
 
 class _KayitEkraniState extends State<KayitEkrani> {
+  // Form kontrolü için text controller'lar
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final ApiService _apiService = ApiService();
 
+  /// Kayıt işlemini gerçekleştirir - form validasyonu ve API çağrısı
   Future<void> _submit() async {
+    // Boş alan kontrolü
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -27,6 +31,7 @@ class _KayitEkraniState extends State<KayitEkrani> {
       return;
     }
 
+    // Şifre uzunluk kontrolü
     if (_passwordController.text.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -41,6 +46,7 @@ class _KayitEkraniState extends State<KayitEkrani> {
     }
 
     // === DEĞİŞİKLİK BURADA: Artık bool yerine String? bekliyoruz ===
+    // API'ye kayıt isteği gönder
     final String? errorMessage = await _apiService.register(
       _usernameController.text,
       _passwordController.text,
@@ -49,6 +55,7 @@ class _KayitEkraniState extends State<KayitEkrani> {
     if (mounted) {
       // Eğer errorMessage null ise, işlem başarılıdır.
       if (errorMessage == null) {
+        // Başarılı kayıt mesajı göster ve giriş ekranına dön
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Registration successful! You can now login.'),
@@ -86,7 +93,7 @@ class _KayitEkraniState extends State<KayitEkrani> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo/Title
+                // Logo ve başlık bölümü
                 Container(
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
@@ -125,7 +132,7 @@ class _KayitEkraniState extends State<KayitEkrani> {
 
                 const SizedBox(height: 40),
 
-                // Register Form
+                // Kayıt formu bölümü
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
@@ -142,7 +149,7 @@ class _KayitEkraniState extends State<KayitEkrani> {
                   ),
                   child: Column(
                     children: [
-                      // Username Field
+                      // Kullanıcı adı input alanı
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.grey.shade50,
@@ -165,7 +172,7 @@ class _KayitEkraniState extends State<KayitEkrani> {
 
                       const SizedBox(height: 16),
 
-                      // Password Field
+                      // Şifre input alanı
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.grey.shade50,
@@ -189,7 +196,7 @@ class _KayitEkraniState extends State<KayitEkrani> {
 
                       const SizedBox(height: 24),
 
-                      // Register Button
+                      // Kayıt ol butonu
                       Container(
                         width: double.infinity,
                         decoration: BoxDecoration(
@@ -233,7 +240,7 @@ class _KayitEkraniState extends State<KayitEkrani> {
 
                       const SizedBox(height: 16),
 
-                      // Login Link
+                      // Giriş yap bağlantısı
                       Container(
                         decoration: BoxDecoration(
                           color: Colors.grey.shade50,

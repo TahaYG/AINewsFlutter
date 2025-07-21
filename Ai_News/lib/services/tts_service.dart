@@ -3,6 +3,7 @@ import 'package:flutter_tts/flutter_tts.dart';
 import '../models/haber.dart';
 import 'dart:io';
 
+/// Text-to-Speech servisi - haber okuma ve kelime takibi
 class TtsService extends ChangeNotifier {
   final FlutterTts _flutterTts = FlutterTts();
   bool _isPlaying = false;
@@ -21,10 +22,12 @@ class TtsService extends ChangeNotifier {
   // Completion callback
   Function()? _onCompletionCallback;
 
+  // Getter'lar - UI'dan erişim için
   bool get isPlaying => _isPlaying;
   bool get isPaused => _isPaused;
   int? get playbackId => _playbackId;
 
+  /// TTS servisini başlatır ve callback'leri ayarlar
   TtsService() {
     // DEĞİŞİKLİK: setCompletionHandler artık bir sonraki parçayı çalıyor.
     _flutterTts.setCompletionHandler(() {
@@ -46,7 +49,7 @@ class TtsService extends ChangeNotifier {
       }
     });
     _flutterTts.setErrorHandler((msg) => _stopPlayback(clearPause: true));
-    // PROGRESS HANDLER
+    // PROGRESS HANDLER - kelime takibi için
     _flutterTts.setProgressHandler((String text, int start, int end, String word) {
       // start: okunan kelimenin metindeki başlangıç indexi
       // end: okunan kelimenin metindeki bitiş indexi
@@ -61,6 +64,7 @@ class TtsService extends ChangeNotifier {
     });
   }
 
+  /// Oynatma state'ini sıfırlar
   void _stopPlayback({bool clearPause = true}) {
     _isPlaying = false;
     _playbackId = null;
@@ -75,6 +79,7 @@ class TtsService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// TTS ayarlarını yapılandırır
   Future<void> _configureTts() async {
     await _flutterTts.setLanguage("tr-TR");
     await _flutterTts.setPitch(1.0);
@@ -92,6 +97,7 @@ class TtsService extends ChangeNotifier {
     }
   }
 
+  /// Tek bir haberi okumaya başlar
   // Tek bir haberi okumak için metot
   Future<void> speakSingle(Haber haber) async {
     await stop();
@@ -107,6 +113,7 @@ class TtsService extends ChangeNotifier {
     _playCurrentItemInPlaylist();
   }
 
+  /// Haber listesini okumaya başlar
   // Bir haber listesini okumak için metot
   Future<void> speakList(List<Haber> haberler) async {
     if (haberler.isNotEmpty) {
@@ -124,6 +131,7 @@ class TtsService extends ChangeNotifier {
     }
   }
 
+  /// Oynatmayı duraklatır - kelime pozisyonu korunur
   Future<void> pause() async {
     // Pause edildiğinde mevcut pozisyonu sakla
     _pausedWordLocation = _lastWordLocation;
@@ -140,6 +148,7 @@ class TtsService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Duraklatılmış oynatmayı devam ettirir - kaldığı yerden
   Future<void> resume() async {
     // Her platformda kaldığı yerden devam et: _pausedWordLocation'dan itibaren metni tekrar okut
     if (_playlist.isNotEmpty && _currentIndex < _playlist.length) {
@@ -165,6 +174,7 @@ class TtsService extends ChangeNotifier {
     }
   }
 
+  /// Oynatmayı tamamen durdurur
   Future<void> stop() async {
     await _flutterTts.stop();
     _stopPlayback(clearPause: true);
@@ -180,6 +190,7 @@ class TtsService extends ChangeNotifier {
     _onCompletionCallback = null;
   }
 
+  /// Servis kapatılırken temizlik işlemleri
   @override
   void dispose() {
     _flutterTts.stop();

@@ -6,8 +6,9 @@ import '../models/haber.dart';
 import '../services/api_service.dart';
 import '../services/tts_service.dart';
 
+/// Haber detay ekranı - haberin tam içeriğini gösterir ve TTS ile okuma sağlar
 class HaberDetayEkrani extends StatefulWidget {
-  final Haber haber;
+  final Haber haber; // Gösterilecek haber
 
   const HaberDetayEkrani({super.key, required this.haber});
 
@@ -16,18 +17,21 @@ class HaberDetayEkrani extends StatefulWidget {
 }
 
 class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
+  // Timer ile okunma sayacı kontrolü
   Timer? _okunmaSayacTimer;
+  // API servis instance'ı
   final ApiService _apiService = ApiService();
 
   // YENİ: TtsService referansını tutacak bir değişken.
   late TtsService _ttsService;
 
+  // İyimser UI için güncel sayaçlar
   late int _guncelTiklanmaSayisi;
   late int _guncelOkunmaSayisi;
 
-  // Eksik değişkenler
-  bool _isBookmarked = false;
-  bool _isPlaying = false;
+  // UI durum değişkenleri
+  bool _isBookmarked = false; // Yer işareti durumu
+  bool _isPlaying = false; // TTS oynatma durumu
 
   @override
   void initState() {
@@ -63,6 +67,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
   }
 
   // Bookmark durumunu kontrol et
+  /// Haberin yer işaretli olup olmadığını API'den kontrol eder
   Future<void> _checkIfBookmarked() async {
     try {
       final bookmarkedList = await _apiService.getYerIsaretliHaberler();
@@ -77,6 +82,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
   }
 
   // Bookmark toggle fonksiyonu
+  /// Yer işareti durumunu değiştirir (ekle/kaldır)
   Future<void> _toggleBookmark() async {
     setState(() {
       _isBookmarked = !_isBookmarked;
@@ -99,13 +105,16 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
   }
 
   // TTS toggle fonksiyonu
+  /// TTS oynatma/durdurma işlemini kontrol eder
   void _togglePlayPause() {
     if (_isPlaying) {
+      // Oynatılıyorsa durdur
       _ttsService.stop();
       setState(() {
         _isPlaying = false;
       });
     } else {
+      // Duruyorsa başlat
       _ttsService.stop().then((_) {
         if (mounted) {
           _ttsService.speakSingle(widget.haber);
@@ -119,6 +128,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
 
   @override
   void dispose() {
+    // Timer'ı iptal et
     _okunmaSayacTimer?.cancel();
     // DEĞİŞİKLİK: Artık güvenli olan lokal referansı kullanıyoruz.
     _ttsService.stop();
@@ -146,7 +156,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
           backgroundColor: Colors.white,
           body: Column(
             children: [
-              // AppBar
+              // Özel AppBar tasarımı
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
@@ -180,6 +190,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
                             ),
                           ),
                         ),
+                        // Yer işareti butonu
                         IconButton(
                           icon: Icon(
                             _isBookmarked
@@ -194,14 +205,14 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
                 ),
               ),
 
-              // Scrollable Content
+              // Kaydırılabilir içerik bölümü
               Expanded(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Haber Başlığı
+                      // Haber başlığı
                       Text(
                         widget.haber.baslik,
                         style: const TextStyle(
@@ -213,7 +224,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
                       ),
                       const SizedBox(height: 16),
 
-                      // Haber Bilgileri
+                      // Haber bilgileri (tarih ve istatistikler)
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
@@ -223,6 +234,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
                         ),
                         child: Row(
                           children: [
+                            // Yayın tarihi
                             Expanded(
                               child: Row(
                                 children: [
@@ -240,6 +252,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
                                 ],
                               ),
                             ),
+                            // İstatistikler (görüntülenme ve okunma sayısı)
                             Row(
                               children: [
                                 Icon(Icons.visibility,
@@ -270,7 +283,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Haber İçeriği
+                      // Haber içerik metni
                       Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
@@ -300,7 +313,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
                 ),
               ),
 
-              // Fixed Play Button at Bottom
+              // Sabit oynatma butonu - ekranın altında
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -360,6 +373,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
     );
   }
 
+  /// İstatistik chip'i oluşturucu widget
   Widget _buildStatChip(IconData icon, String value) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),

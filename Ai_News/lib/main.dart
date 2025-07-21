@@ -8,14 +8,19 @@ import 'screens/giris_ekrani.dart';
 import 'screens/kayit_ekrani.dart';
 import 'services/tts_service.dart';
 
+/// Ana uygulama giriş noktası
 void main() async {
+  // Flutter widget binding'ini başlat
   WidgetsFlutterBinding.ensureInitialized();
+  // İngilizce tarih formatlarını başlat
   await initializeDateFormatting('en_US', null);
 
   runApp(
     MultiProvider(
       providers: [
+        // Kimlik doğrulama servisi - uygulama başlarken otomatik giriş kontrolü yapar
         ChangeNotifierProvider(create: (context) => AuthService()..initAuth()),
+        // Text-to-Speech servisi - haber okuma özelliği için
         ChangeNotifierProvider(
             create: (context) => TtsService()), // YENİ: TtsService eklendi.
       ],
@@ -24,6 +29,7 @@ void main() async {
   );
 }
 
+/// Ana uygulama widget'ı - tema ayarları ve routing
 class HaberUygulamasi extends StatelessWidget {
   const HaberUygulamasi({super.key});
 
@@ -72,9 +78,11 @@ class HaberUygulamasi extends StatelessWidget {
       title: 'AI News Engine',
       debugShowCheckedModeBanner: false,
       theme: lightTheme,
+      // Named routes - kayıt ekranı için
       routes: {
         '/kayit': (context) => const KayitEkrani(),
       },
+      // Ana sayfa - giriş durumuna göre ekran seçimi
       home: Consumer<AuthService>(
         builder: (context, authService, child) {
           // Giriş durumuna göre doğru ekranı göster

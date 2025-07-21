@@ -6,6 +6,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/kategori.dart';
 import '../models/haber.dart';
 
+/// API servisi - backend ile iletişim sağlar
 class ApiService {
   static const String _baseUrl = 'http://10.0.2.2:5175';
   static const int _pageSize = 10;
@@ -22,6 +23,7 @@ class ApiService {
   }
 
   // --- AUTH METOTLARI ---
+  /// Kullanıcı girişi - username ve password ile giriş yapar
   Future<Map<String, dynamic>?> login(String username, String password) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/api/Auth/login'),
@@ -31,6 +33,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
+      // Token ve kullanıcı bilgilerini güvenli depolamaya kaydet
       await _storage.write(key: 'auth_token', value: responseData['token']);
       await _storage.write(
           key: 'user_roles', value: jsonEncode(responseData['roles']));
@@ -40,6 +43,7 @@ class ApiService {
     return null;
   }
 
+  /// Yeni kullanıcı kaydı - hata durumunda mesaj döndürür
   Future<String?> register(String username, String password) async {
     final response = await http.post(
       Uri.parse('$_baseUrl/api/Auth/register'),
@@ -56,6 +60,7 @@ class ApiService {
   }
 
   // --- YER İŞARETİ METOTLARI ---
+  /// Kullanıcının yer işaretli haberlerini getirir
   Future<List<Haber>> getYerIsaretliHaberler() async {
     final response = await http.get(Uri.parse('$_baseUrl/api/YerIsaretleri'),
         headers: await _getHeaders());
@@ -67,17 +72,20 @@ class ApiService {
     }
   }
 
+  /// Haberi yer işaretlerine ekler
   Future<void> yerIsaretiEkle(int haberId) async {
     await http.post(Uri.parse('$_baseUrl/api/YerIsaretleri/$haberId'),
         headers: await _getHeaders());
   }
 
+  /// Haberi yer işaretlerinden siler
   Future<void> yerIsaretiSil(int haberId) async {
     await http.delete(Uri.parse('$_baseUrl/api/YerIsaretleri/$haberId'),
         headers: await _getHeaders());
   }
 
   // --- GENEL VERİ ÇEKME METOTLARI ---
+  /// Haber kategorilerini API'den çeker
   Future<List<Kategori>> getKategoriler() async {
     try {
       final response = await http
@@ -100,6 +108,7 @@ class ApiService {
   }
 
   // === DEĞİŞİKLİK: C# Controller'ınızdaki doğru endpoint'i çağıracak şekilde güncellendi ===
+  /// Haberleri sayfalı olarak getirir - infinite scroll için
   Future<PagedHaberResult> getHaberler(
       {int pageNumber = 1, int? kategoriId}) async {
     final kategoriQuery = (kategoriId != null && kategoriId != 0)
@@ -141,6 +150,7 @@ class ApiService {
   }
 
   // --- SAYAÇ METOTLARI ---
+  /// Haber tıklanma sayısını artırır
   Future<bool> haberTiklandi(int haberId) async {
     // C# Controller'ınızdaki metoda uygun olarak PUT kullanıyoruz.
     final response = await http.put(
@@ -149,6 +159,7 @@ class ApiService {
     return response.statusCode == 200;
   }
 
+  /// Haber okunma sayısını artırır
   Future<bool> haberOkundu(int haberId) async {
     // C# Controller'ınızdaki metoda uygun olarak PUT kullanıyoruz.
     final response = await http.put(
@@ -159,6 +170,7 @@ class ApiService {
 }
 
 // PagedHaberResult sınıfı
+/// Sayfalı haber sonucu - infinite scroll için
 class PagedHaberResult {
   final List<Haber> haberler;
   final bool sonSayfaMi;

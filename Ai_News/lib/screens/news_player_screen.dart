@@ -3,9 +3,10 @@ import 'package:provider/provider.dart';
 import '../models/haber.dart';
 import '../services/tts_service.dart';
 
+/// Haber oynatıcı ekranı - TTS ile haber okuma ve kelime takibi
 class NewsPlayerScreen extends StatefulWidget {
-  final List<Haber> haberler;
-  final int initialIndex;
+  final List<Haber> haberler; // Oynatılacak haber listesi
+  final int initialIndex; // Başlangıç haber indeksi
   const NewsPlayerScreen(
       {Key? key, required this.haberler, this.initialIndex = 0})
       : super(key: key);
@@ -15,14 +16,19 @@ class NewsPlayerScreen extends StatefulWidget {
 }
 
 class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
-  late int _currentIndex;
-  bool _isPlaying = false;
-  int _currentWordIndex = 0;
-  List<String> _words = [];
-  List<int> _wordOffsets = [];
+  // Oynatma kontrolü için değişkenler
+  late int _currentIndex; // Şu anki haber indeksi
+  bool _isPlaying = false; // Oynatma durumu
+  int _currentWordIndex = 0; // Şu anki kelime indeksi
+  List<String> _words = []; // Haber metnindeki kelimeler
+  List<int> _wordOffsets = []; // Kelimelerin metindeki pozisyonları
+  
+  // Servis referansları
   TtsService? _ttsService;
+  
+  // UI kontrolü
   final ScrollController _lyricsScrollController = ScrollController();
-  final Map<int, GlobalKey> _wordKeys = {};
+  final Map<int, GlobalKey> _wordKeys = {}; // Kelime widget'larının key'leri
 
   @override
   void initState() {
@@ -58,6 +64,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     super.dispose();
   }
 
+  /// TTS progress değişikliklerini dinler ve kelime takibini günceller
   void _onTtsProgress() {
     if (_ttsService != null && _wordOffsets.isNotEmpty) {
       int idx = 0;
@@ -73,7 +80,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
         _isPlaying = _ttsService!.isPlaying &&
             !_ttsService!.isPaused; // TTS service'den al
       });
-      // Scroll to active word
+      // Aktif kelimeye scroll yap
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final key = _wordKeys[_currentWordIndex];
         if (key != null && key.currentContext != null) {
@@ -88,6 +95,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     }
   }
 
+  /// Mevcut haberin metnini hazırlar ve kelime listesini oluşturur
   void _prepareCurrent() {
     final haber = widget.haberler[_currentIndex];
     final text = "${haber.baslik}. ${haber.icerik ?? ''}";
@@ -103,6 +111,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     });
   }
 
+  /// Mevcut haberi oynatmaya başlar
   Future<void> _playCurrent() async {
     // Pause durumundaysa önce temizle
     if (_ttsService?.isPaused == true) {
@@ -116,6 +125,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     await _ttsService?.speakSingle(haber);
   }
 
+  /// Oynatmayı duraklatır
   Future<void> _pause() async {
     await _ttsService?.pause();
     setState(() {
@@ -123,6 +133,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     });
   }
 
+  /// Duraklatılan oynatmayı devam ettirir
   Future<void> _resume() async {
     await _ttsService?.resume();
     setState(() {
@@ -130,6 +141,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     });
   }
 
+  /// Sonraki habere geçer
   Future<void> _next() async {
     if (_currentIndex < widget.haberler.length - 1) {
       // Pause durumundaysa önce temizle
@@ -150,6 +162,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     }
   }
 
+  /// Önceki habere geçer
   Future<void> _prev() async {
     if (_currentIndex > 0) {
       // Pause durumundaysa önce temizle
@@ -170,6 +183,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     }
   }
 
+  /// Play/Pause butonuna basıldığında çağrılır
   Future<void> _onPlayPausePressed() async {
     if (_ttsService?.isPaused == true) {
       // Pause durumundaysa resume et
@@ -183,6 +197,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     }
   }
 
+  /// Kelimelerin metindeki pozisyonlarını hesaplar
   List<int> _calculateWordOffsets(String text) {
     List<int> offsets = [];
     int idx = 0;
@@ -193,6 +208,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     return offsets;
   }
 
+  /// TTS okuma tamamlandığında çağrılır
   void _onTtsCompleted() {
     // Haber tamamlandığında otomatik olarak sonraki habere geç
     if (_currentIndex < widget.haberler.length - 1) {
@@ -234,7 +250,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
       ),
       body: Column(
         children: [
-          // Haber Metni Card
+          // Haber metni kartı - kelime takibi ile
           Expanded(
             child: Container(
               margin: const EdgeInsets.all(16),
@@ -255,7 +271,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
             ),
           ),
 
-          // Progress Bar
+          // İlerleme barı - okuma ilerlemesini gösterir
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
             child: LinearProgressIndicator(
@@ -265,7 +281,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
             ),
           ),
 
-          // Control Buttons
+          // Kontrol butonları - önceki, play/pause, sonraki
           Container(
             padding: const EdgeInsets.all(24),
             child: Row(
@@ -290,6 +306,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     );
   }
 
+  /// Klasik şarkı sözü görünümü - kelime vurgulama ile
   Widget _buildClassicLyrics() {
     if (_words.isEmpty) return const SizedBox();
 
@@ -325,6 +342,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     );
   }
 
+  /// Klasik kontrol butonu (önceki/sonraki için)
   Widget _buildClassicControlButton({
     required IconData icon,
     required VoidCallback onPressed,
@@ -347,6 +365,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
     );
   }
 
+  /// Ana play/pause butonu - özel tasarım ile
   Widget _buildClassicPlayPauseButton() {
     return Container(
       decoration: BoxDecoration(

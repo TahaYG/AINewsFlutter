@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+/// Kategori adına göre uygun ikonu döndürür
 IconData getIconForCategory(String kategoriAdi) {
   // Gelen kategori adını küçük harfe çevirerek karşılaştırmayı kolaylaştırıyoruz.
   final adi = kategoriAdi.toLowerCase();
@@ -36,6 +37,7 @@ IconData getIconForCategory(String kategoriAdi) {
 }
 
 // Kategori isimlerini Türkçe'den İngilizce'ye çeviren fonksiyon
+/// Kategori adını Türkçe'den İngilizce'ye çevirir
 String translateCategoryName(String kategoriAdi) {
   switch (kategoriAdi.toLowerCase()) {
     case 'teknoloji':
