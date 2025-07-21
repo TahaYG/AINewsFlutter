@@ -175,7 +175,6 @@ Created with ❤️ by Taha Yiğit Göksu
 ## 🙏 Acknowledgments
 
 - Flutter team for the amazing framework
-- Google Fonts for beautiful typography
 - Flutter community for helpful packages
 
 ---
