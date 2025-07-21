@@ -169,7 +169,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
                               color: Colors.black87),
                           onPressed: () => Navigator.pop(context),
                         ),
-                        Expanded(
+                        const Expanded(
                           child: Text(
                             'News Detail',
                             textAlign: TextAlign.center,
@@ -204,7 +204,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
                       // Haber Başlığı
                       Text(
                         widget.haber.baslik,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 24,
                           fontWeight: FontWeight.w700,
                           color: Colors.black87,
@@ -287,7 +287,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
                         ),
                         child: Text(
                           widget.haber.icerik ?? 'Content not found.',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 16,
                             height: 1.6,
                             color: Colors.black87,
@@ -340,7 +340,7 @@ class _HaberDetayEkraniState extends State<HaberDetayEkrani> {
                             const SizedBox(width: 12),
                             Text(
                               _isPlaying ? 'Stop Playing' : 'Listen to News',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,

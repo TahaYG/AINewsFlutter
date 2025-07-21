@@ -38,7 +38,7 @@ class _KaydedilenlerEkraniState extends State<KaydedilenlerEkrani> {
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
+        title: const Text(
           'Bookmarks',
           style: TextStyle(
             color: Colors.black87,
@@ -52,7 +52,7 @@ class _KaydedilenlerEkraniState extends State<KaydedilenlerEkrani> {
         future: _kaydedilenHaberlerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
+            return const Center(
               child: CircularProgressIndicator(
                 color: Colors.black87,
               ),
@@ -71,13 +71,13 @@ class _KaydedilenlerEkraniState extends State<KaydedilenlerEkrani> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.error_outline,
                       color: Colors.red,
                       size: 48,
                     ),
                     const SizedBox(height: 16),
-                    Text(
+                    const Text(
                       'Error',
                       style: TextStyle(
                         fontSize: 18,
@@ -117,7 +117,7 @@ class _KaydedilenlerEkraniState extends State<KaydedilenlerEkrani> {
                       size: 64,
                     ),
                     const SizedBox(height: 16),
-                    Text(
+                    const Text(
                       'No Bookmarks Yet',
                       style: TextStyle(
                         fontSize: 18,
@@ -144,7 +144,8 @@ class _KaydedilenlerEkraniState extends State<KaydedilenlerEkrani> {
             color: Colors.black87,
             onRefresh: () async {
               setState(() {
-                _kaydedilenHaberlerFuture = _apiService.getYerIsaretliHaberler();
+                _kaydedilenHaberlerFuture =
+                    _apiService.getYerIsaretliHaberler();
               });
             },
             child: ListView.builder(
@@ -158,7 +159,8 @@ class _KaydedilenlerEkraniState extends State<KaydedilenlerEkrani> {
                     haber: haber,
                     onGeriDonuldu: () {
                       setState(() {
-                        _kaydedilenHaberlerFuture = _apiService.getYerIsaretliHaberler();
+                        _kaydedilenHaberlerFuture =
+                            _apiService.getYerIsaretliHaberler();
                       });
                     },
                   ),

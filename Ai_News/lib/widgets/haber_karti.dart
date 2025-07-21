@@ -161,7 +161,7 @@ class _HaberKartiState extends State<HaberKarti> {
                             Expanded(
                               child: Text(
                                 widget.haber.baslik,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
                                   color: Colors.black87,

@@ -59,11 +59,11 @@ class HaberUygulamasi extends StatelessWidget {
         bodyColor: Colors.black.withOpacity(0.8),
         displayColor: Colors.black,
       ),
-      tabBarTheme: TabBarTheme(
-        labelColor: const Color(0xFF0D47A1),
+      tabBarTheme: const TabBarTheme(
+        labelColor: Color(0xFF0D47A1),
         unselectedLabelColor: Colors.black54,
         indicator: UnderlineTabIndicator(
-          borderSide: const BorderSide(color: Color(0xFF0D47A1), width: 3.0),
+          borderSide: BorderSide(color: Color(0xFF0D47A1), width: 3.0),
         ),
       ),
     );

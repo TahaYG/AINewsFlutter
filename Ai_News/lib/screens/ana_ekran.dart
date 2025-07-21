@@ -130,12 +130,12 @@ class _AnaEkranState extends State<AnaEkran>
                 child: SafeArea(
                   child: Row(
                     children: [
-                      Row(
+                      const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.smart_toy_outlined,
                               color: Colors.black87, size: 28),
-                          const SizedBox(width: 8),
+                          SizedBox(width: 8),
                           Text(
                             'news.ai',
                             style: TextStyle(
@@ -196,7 +196,8 @@ class _AnaEkranState extends State<AnaEkran>
                           } else {
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
-                                content: Text('No news to play in this tab.'),
+                                content:
+                                    const Text('No news to play in this tab.'),
                                 backgroundColor: Colors.grey.shade800,
                                 behavior: SnackBarBehavior.floating,
                                 shape: RoundedRectangleBorder(
@@ -208,12 +209,12 @@ class _AnaEkranState extends State<AnaEkran>
                       ),
                       const SizedBox(width: 8),
                       if (authService.isAdmin)
-                        Row(
+                        const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.admin_panel_settings,
                                 size: 18, color: Colors.red),
-                            const SizedBox(width: 4),
+                            SizedBox(width: 4),
                             Text('Admin',
                                 style: TextStyle(
                                     color: Colors.red,
@@ -222,12 +223,12 @@ class _AnaEkranState extends State<AnaEkran>
                           ],
                         ),
                       if (!authService.isAdmin && authService.isModerator)
-                        Row(
+                        const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(Icons.security_outlined,
                                 size: 18, color: Colors.orange),
-                            const SizedBox(width: 4),
+                            SizedBox(width: 4),
                             Text('Mod',
                                 style: TextStyle(
                                     color: Colors.orange,
@@ -248,7 +249,7 @@ class _AnaEkranState extends State<AnaEkran>
                           },
                           child: Container(
                             padding: const EdgeInsets.all(10),
-                            child: Icon(
+                            child: const Icon(
                               Icons.account_circle_outlined,
                               color: Colors.black87,
                               size: 26,
@@ -270,7 +271,7 @@ class _AnaEkranState extends State<AnaEkran>
                   padding: EdgeInsets.zero,
                   isScrollable: true,
                   tabAlignment: TabAlignment.start,
-                  indicator: BoxDecoration(
+                  indicator: const BoxDecoration(
                     color: Colors.black87,
                     shape: BoxShape.circle,
                   ),
@@ -280,10 +281,10 @@ class _AnaEkranState extends State<AnaEkran>
                   dividerColor: Colors.transparent,
                   labelColor: Colors.black87,
                   unselectedLabelColor: Colors.grey.shade600,
-                  labelStyle:
-                      TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
-                  unselectedLabelStyle:
-                      TextStyle(fontWeight: FontWeight.w400, fontSize: 18),
+                  labelStyle: const TextStyle(
+                      fontWeight: FontWeight.w600, fontSize: 18),
+                  unselectedLabelStyle: const TextStyle(
+                      fontWeight: FontWeight.w400, fontSize: 18),
                   labelPadding: const EdgeInsets.symmetric(horizontal: 2),
                   tabs: tumKategoriler
                       .map((kategori) => Tab(
@@ -346,7 +347,7 @@ class _AnaEkranState extends State<AnaEkran>
                               ),
                               child: Text(
                                 'First page could not be loaded: ${controller.error}',
-                                style: TextStyle(color: Colors.black87),
+                                style: const TextStyle(color: Colors.black87),
                               ),
                             )),
                             noItemsFoundIndicatorBuilder: (context) => Center(
@@ -359,7 +360,7 @@ class _AnaEkranState extends State<AnaEkran>
                               ),
                               child: Text(
                                 'No news found in ${translateCategoryName(kategori.ad)} category.',
-                                style: TextStyle(color: Colors.black87),
+                                style: const TextStyle(color: Colors.black87),
                               ),
                             )),
                           ),

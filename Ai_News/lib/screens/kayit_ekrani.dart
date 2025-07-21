@@ -17,10 +17,11 @@ class _KayitEkraniState extends State<KayitEkrani> {
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please fill in all fields.'),
+          content: const Text('Please fill in all fields.'),
           backgroundColor: Colors.red.withOpacity(0.9),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
       return;
@@ -29,10 +30,11 @@ class _KayitEkraniState extends State<KayitEkrani> {
     if (_passwordController.text.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Password must be at least 6 characters.'),
+          content: const Text('Password must be at least 6 characters.'),
           backgroundColor: Colors.red.withOpacity(0.9),
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
       return;
@@ -49,13 +51,15 @@ class _KayitEkraniState extends State<KayitEkrani> {
       if (errorMessage == null) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Registration successful! You can now login.'),
+            content: const Text('Registration successful! You can now login.'),
             backgroundColor: Colors.green.withOpacity(0.9),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
-        Navigator.of(context).pop(); // Kayıt başarılıysa giriş ekranına geri dön
+        Navigator.of(context)
+            .pop(); // Kayıt başarılıysa giriş ekranına geri dön
       } else {
         // Eğer bir hata mesajı varsa, onu göster.
         ScaffoldMessenger.of(context).showSnackBar(
@@ -63,7 +67,8 @@ class _KayitEkraniState extends State<KayitEkrani> {
             content: Text(errorMessage),
             backgroundColor: Colors.red.withOpacity(0.9),
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         );
       }
@@ -91,13 +96,13 @@ class _KayitEkraniState extends State<KayitEkrani> {
                   ),
                   child: Column(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.person_add_outlined,
                         size: 60,
                         color: Colors.black87,
                       ),
                       const SizedBox(height: 16),
-                      Text(
+                      const Text(
                         'Create Account',
                         style: TextStyle(
                           fontSize: 28,
@@ -117,9 +122,9 @@ class _KayitEkraniState extends State<KayitEkrani> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 40),
-                
+
                 // Register Form
                 Container(
                   padding: const EdgeInsets.all(24),
@@ -146,19 +151,20 @@ class _KayitEkraniState extends State<KayitEkrani> {
                         ),
                         child: TextField(
                           controller: _usernameController,
-                          style: TextStyle(color: Colors.black87),
+                          style: const TextStyle(color: Colors.black87),
                           decoration: InputDecoration(
                             hintText: 'Username',
                             hintStyle: TextStyle(color: Colors.grey.shade500),
-                            prefixIcon: Icon(Icons.person_outline, color: Colors.grey.shade600),
+                            prefixIcon: Icon(Icons.person_outline,
+                                color: Colors.grey.shade600),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.all(16),
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 16),
-                      
+
                       // Password Field
                       Container(
                         decoration: BoxDecoration(
@@ -169,19 +175,20 @@ class _KayitEkraniState extends State<KayitEkrani> {
                         child: TextField(
                           controller: _passwordController,
                           obscureText: true,
-                          style: TextStyle(color: Colors.black87),
+                          style: const TextStyle(color: Colors.black87),
                           decoration: InputDecoration(
                             hintText: 'Password',
                             hintStyle: TextStyle(color: Colors.grey.shade500),
-                            prefixIcon: Icon(Icons.lock_outline, color: Colors.grey.shade600),
+                            prefixIcon: Icon(Icons.lock_outline,
+                                color: Colors.grey.shade600),
                             border: InputBorder.none,
                             contentPadding: const EdgeInsets.all(16),
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // Register Button
                       Container(
                         width: double.infinity,
@@ -203,11 +210,12 @@ class _KayitEkraniState extends State<KayitEkrani> {
                             onTap: _submit,
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              child: Row(
+                              child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.person_add, color: Colors.white, size: 20),
-                                  const SizedBox(width: 8),
+                                  Icon(Icons.person_add,
+                                      color: Colors.white, size: 20),
+                                  SizedBox(width: 8),
                                   Text(
                                     'Create Account',
                                     style: TextStyle(
@@ -222,9 +230,9 @@ class _KayitEkraniState extends State<KayitEkrani> {
                           ),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 16),
-                      
+
                       // Login Link
                       Container(
                         decoration: BoxDecoration(
@@ -244,7 +252,8 @@ class _KayitEkraniState extends State<KayitEkrani> {
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.login, color: Colors.grey.shade600, size: 20),
+                                  Icon(Icons.login,
+                                      color: Colors.grey.shade600, size: 20),
                                   const SizedBox(width: 8),
                                   Text(
                                     'Already have an account? Login',
@@ -263,7 +272,7 @@ class _KayitEkraniState extends State<KayitEkrani> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 40),
               ],
             ),

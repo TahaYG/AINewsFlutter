@@ -17,7 +17,7 @@ class _GirisEkraniState extends State<GirisEkrani> {
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please fill in all fields.'),
+          content: const Text('Please fill in all fields.'),
           backgroundColor: Colors.red.withOpacity(0.9),
           behavior: SnackBarBehavior.floating,
           shape:
@@ -36,7 +36,8 @@ class _GirisEkraniState extends State<GirisEkrani> {
     if (!success && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Login failed! Username or password is incorrect.'),
+          content:
+              const Text('Login failed! Username or password is incorrect.'),
           backgroundColor: Colors.red.withOpacity(0.9),
           behavior: SnackBarBehavior.floating,
           shape:
@@ -67,13 +68,13 @@ class _GirisEkraniState extends State<GirisEkrani> {
                   ),
                   child: Column(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.smart_toy_outlined,
                         size: 60,
                         color: Colors.black87,
                       ),
                       const SizedBox(height: 16),
-                      Text(
+                      const Text(
                         'news.ai',
                         style: TextStyle(
                           fontSize: 32,
@@ -113,7 +114,7 @@ class _GirisEkraniState extends State<GirisEkrani> {
                   ),
                   child: Column(
                     children: [
-                      Text(
+                      const Text(
                         'Login',
                         style: TextStyle(
                           fontSize: 24,
@@ -133,7 +134,7 @@ class _GirisEkraniState extends State<GirisEkrani> {
                         ),
                         child: TextField(
                           controller: _usernameController,
-                          style: TextStyle(color: Colors.black87),
+                          style: const TextStyle(color: Colors.black87),
                           decoration: InputDecoration(
                             hintText: 'Username',
                             hintStyle: TextStyle(color: Colors.grey.shade500),
@@ -157,7 +158,7 @@ class _GirisEkraniState extends State<GirisEkrani> {
                         child: TextField(
                           controller: _passwordController,
                           obscureText: true,
-                          style: TextStyle(color: Colors.black87),
+                          style: const TextStyle(color: Colors.black87),
                           decoration: InputDecoration(
                             hintText: 'Password',
                             hintStyle: TextStyle(color: Colors.grey.shade500),
@@ -192,11 +193,12 @@ class _GirisEkraniState extends State<GirisEkrani> {
                             onTap: _submit,
                             child: Container(
                               padding: const EdgeInsets.symmetric(vertical: 16),
-                              child: Row(
+                              child: const Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.login, color: Colors.white, size: 20),
-                                  const SizedBox(width: 8),
+                                  Icon(Icons.login,
+                                      color: Colors.white, size: 20),
+                                  SizedBox(width: 8),
                                   Text(
                                     'Login',
                                     style: TextStyle(

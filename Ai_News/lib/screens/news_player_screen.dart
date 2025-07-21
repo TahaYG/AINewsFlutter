@@ -222,7 +222,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
+        title: const Text(
           'news.ai player',
           style: TextStyle(
             color: Colors.black87,
@@ -261,7 +261,7 @@ class _NewsPlayerScreenState extends State<NewsPlayerScreen> {
             child: LinearProgressIndicator(
               value: _words.isNotEmpty ? _currentWordIndex / _words.length : 0,
               backgroundColor: Colors.grey.shade300,
-              valueColor: AlwaysStoppedAnimation<Color>(Colors.black87),
+              valueColor: const AlwaysStoppedAnimation<Color>(Colors.black87),
             ),
           ),
 

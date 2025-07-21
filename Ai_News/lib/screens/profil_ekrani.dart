@@ -24,7 +24,7 @@ class ProfilEkrani extends StatelessWidget {
           icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black87),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text(
+        title: const Text(
           'Profile',
           style: TextStyle(
             color: Colors.black87,
@@ -72,7 +72,7 @@ class ProfilEkrani extends StatelessWidget {
                         // Kullanıcı Adı
                         Text(
                           authService.username ?? 'User',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w900,
                             color: Colors.black,
@@ -131,13 +131,13 @@ class ProfilEkrani extends StatelessWidget {
                               horizontal: 20, vertical: 16),
                           child: Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.bookmark,
                                 color: Colors.black87,
                                 size: 24,
                               ),
                               const SizedBox(width: 16),
-                              Expanded(
+                              const Expanded(
                                 child: Text(
                                   'Bookmarks',
                                   style: TextStyle(
@@ -179,14 +179,14 @@ class ProfilEkrani extends StatelessWidget {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(16),
                               ),
-                              title: Text(
+                              title: const Text(
                                 'Logout',
                                 style: TextStyle(
                                   color: Colors.black87,
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              content: Text(
+                              content: const Text(
                                 'Are you sure you want to logout?',
                                 style: TextStyle(color: Colors.black87),
                               ),
@@ -206,7 +206,7 @@ class ProfilEkrani extends StatelessWidget {
                                     Navigator.of(context)
                                         .pushReplacementNamed('/');
                                   },
-                                  child: Text(
+                                  child: const Text(
                                     'Logout',
                                     style: TextStyle(color: Colors.red),
                                   ),
@@ -218,7 +218,7 @@ class ProfilEkrani extends StatelessWidget {
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        child: Center(
+                        child: const Center(
                           child: Text(
                             'Log out',
                             style: TextStyle(
