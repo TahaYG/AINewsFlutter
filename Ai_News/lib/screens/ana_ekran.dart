@@ -130,14 +130,30 @@ class _AnaEkranState extends State<AnaEkran>
         if (kategoriSnapshot.connectionState == ConnectionState.waiting ||
             _tabController == null) {
           return Scaffold(
-              appBar: AppBar(title: const Text('news.ai')),
+              appBar: AppBar(
+                title: const Text('news.ai'),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(50),
+                    bottomRight: Radius.circular(50),
+                  ),
+                ),
+              ),
               body: const Center(child: CircularProgressIndicator()));
         }
 
         // Hata durumu kontrolü
         if (kategoriSnapshot.hasError) {
           return Scaffold(
-              appBar: AppBar(title: const Text('Error')),
+              appBar: AppBar(
+                title: const Text('Error'),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(25),
+                    bottomRight: Radius.circular(25),
+                  ),
+                ),
+              ),
               body: Center(
                   child: Text(
                       'Categories could not be loaded: ${kategoriSnapshot.error}')));
@@ -146,7 +162,15 @@ class _AnaEkranState extends State<AnaEkran>
         // Veri kontrolü
         if (!kategoriSnapshot.hasData || kategoriSnapshot.data!.isEmpty) {
           return Scaffold(
-              appBar: AppBar(title: const Text('No Data')),
+              appBar: AppBar(
+                title: const Text('No Data'),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(25),
+                    bottomRight: Radius.circular(25),
+                  ),
+                ),
+              ),
               body: const Center(child: Text('No categories found.')));
         }
 
@@ -166,6 +190,10 @@ class _AnaEkranState extends State<AnaEkran>
                   color: Colors.white,
                   border: Border(
                     bottom: BorderSide(color: Colors.grey.shade300, width: 1),
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(25),
+                    bottomRight: Radius.circular(25),
                   ),
                 ),
                 child: SafeArea(
