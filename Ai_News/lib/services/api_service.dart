@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../models/kategori.dart';
 import '../models/haber.dart';
+import '../models/yorum.dart';
 
 /// API servisi - backend ile iletişim sağlar
 class ApiService {
@@ -146,6 +147,75 @@ class ApiService {
           'Sunucuya bağlanılamadı. İnternet bağlantınızı kontrol edin.');
     } catch (e) {
       rethrow;
+    }
+  }
+
+  /// Bir haberin yorumlarını getirir
+  Future<List<YorumDto>> getYorumlar(int haberId, {int sayfa = 1, int sayfaBoyutu = 10}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/api/Yorumlar/haber/$haberId?sayfa=$sayfa&sayfaBoyutu=$sayfaBoyutu'),
+      headers: await _getHeaders(),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      final List yorumlar = data['items'];
+      return yorumlar.map((e) => YorumDto.fromJson(e)).toList();
+    } else {
+      throw Exception('Yorumlar yüklenemedi.');
+    }
+  }
+
+  /// Habere yeni yorum ekler
+  Future<YorumDto> yorumEkle({required int haberId, required String icerik}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/Yorumlar'),
+      headers: await _getHeaders(),
+      body: jsonEncode({'haberId': haberId, 'icerik': icerik}),
+    );
+    if (response.statusCode == 201) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return YorumDto.fromJson(data);
+    } else {
+      throw Exception('Yorum eklenemedi.');
+    }
+  }
+
+  /// Yoruma yanıt ekle
+  Future<YorumYanitiDto> yorumYanitiEkle({required int yorumId, required String icerik}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/Yorumlar/$yorumId/yanitlar'),
+      headers: await _getHeaders(),
+      body: jsonEncode({'icerik': icerik}),
+    );
+    if (response.statusCode == 201) {
+      final data = jsonDecode(utf8.decode(response.bodyBytes));
+      return YorumYanitiDto.fromJson(data);
+    } else {
+      throw Exception('Yanıt eklenemedi.');
+    }
+  }
+
+  /// Yoruma like/dislike
+  Future<void> yorumLike({required int yorumId, required bool isLike}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/Yorumlar/$yorumId/like'),
+      headers: await _getHeaders(),
+      body: jsonEncode({'isLike': isLike}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Like işlemi başarısız.');
+    }
+  }
+
+  /// Yanıta like/dislike
+  Future<void> yorumYanitiLike({required int yanitId, required bool isLike}) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/api/Yorumlar/yanitlar/$yanitId/like'),
+      headers: await _getHeaders(),
+      body: jsonEncode({'isLike': isLike}),
+    );
+    if (response.statusCode != 200) {
+      throw Exception('Yanıt like işlemi başarısız.');
     }
   }
 
